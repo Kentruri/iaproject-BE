@@ -11,6 +11,7 @@ import {
   isSolution,
   myCoordinates,
   node,
+  POWERUPTYPE,
   readWorld,
   removeFromQueue,
   removeFromStock,
@@ -30,7 +31,10 @@ export const bfsMethod = (req: Request, res: Response) => {
       actions: "",
       level: 0,
       costs: 0,
-      powerUp: undefined,
+      powerUp: {
+        type: POWERUPTYPE.EMPTY,
+        remainingUses: 0,
+      },
     };
 
     let hashTable = {};
@@ -82,7 +86,10 @@ export const dfsMethod = (req: Request, res: Response) => {
       actions: "",
       level: 0,
       costs: 0,
-      powerUp: undefined,
+      powerUp: {
+        type: POWERUPTYPE.EMPTY,
+        remainingUses: 0,
+      },
     };
 
     stock.push(root);
@@ -130,7 +137,10 @@ export const ucsMethod = (req: Request, res: Response) => {
       actions: "",
       level: 0,
       costs: 0,
-      powerUp: undefined,
+      powerUp: {
+        type: POWERUPTYPE.EMPTY,
+        remainingUses: 0,
+      },
     };
     list.push(root);
     while (true) {

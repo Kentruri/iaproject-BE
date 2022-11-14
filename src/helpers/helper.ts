@@ -2,9 +2,10 @@ import { UploadedFile } from "express-fileupload";
 
 //typos
 
-enum POWERUP {
+export enum POWERUPTYPE {
   STAR = "STAR",
   FLOWER = "FLOWER",
+  EMPTY = "EMPTY"
 }
 
 enum ACTIONS {
@@ -12,6 +13,11 @@ enum ACTIONS {
   UP = "U",
   RIGHT = "R",
   DOWN = "D",
+}
+
+interface POWERUP {
+  type: POWERUPTYPE,
+  remainingUses: number,
 }
 
 export interface node {
@@ -22,7 +28,7 @@ export interface node {
   actions: string;
   level: number;
   costs: number;
-  powerUp: POWERUP | undefined | null;
+  powerUp: POWERUP;
 }
 
 interface coordinates {
@@ -32,46 +38,61 @@ interface coordinates {
 
 //HEURISTICS
 
+// export const heuristics = (
+//   node: node["value"],
+//   objective: node["value"],
+//   distance: number
+// ): number => {
+//   const xIsEqual: boolean = node.x == objective.x;
+//   const yIsEqual: boolean = node.y == objective.y;
+//   if (xIsEqual && yIsEqual) {
+//     return Math.floor(distance / 2) + 0.5;
+//   }
+
+//   if (!xIsEqual && !yIsEqual) {
+//     return heuristics(
+//       {
+//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
+//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   } else if (xIsEqual) {
+//     return heuristics(
+//       {
+//         x: node.x,
+//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   } else {
+//     return heuristics(
+//       {
+//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
+//         y: node.y,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   }
+// };
+
 export const heuristics = (
   node: node["value"],
   objective: node["value"],
-  distance: number
 ): number => {
-  const xIsEqual: boolean = node.x == objective.x;
-  const yIsEqual: boolean = node.y == objective.y;
-  if (xIsEqual && yIsEqual) {
-    return Math.floor(distance / 2) + 0.5;
+
+  const diference = {
+    x: Math.abs(objective.x - node.x),
+    y: Math.abs(objective.y - node.y),
   }
 
-  if (!xIsEqual && !yIsEqual) {
-    return heuristics(
-      {
-        x: node.x < objective.x ? node.x + 1 : node.x - 1,
-        y: node.y < objective.y ? node.y + 1 : node.y - 1,
-      },
-      objective,
-      distance + 1
-    );
-  } else if (xIsEqual) {
-    return heuristics(
-      {
-        x: node.x,
-        y: node.y < objective.y ? node.y + 1 : node.y - 1,
-      },
-      objective,
-      distance + 1
-    );
-  } else {
-    return heuristics(
-      {
-        x: node.x < objective.x ? node.x + 1 : node.x - 1,
-        y: node.y,
-      },
-      objective,
-      distance + 1
-    );
-  }
-};
+  const distance = (Math.sqrt(Math.pow(diference.x, 2) + Math.pow(diference.y, 2))) / 2
+  return distance
+
+}
 
 //CONSTANTS
 
@@ -92,14 +113,48 @@ export const getChildren = (node: node, world: Array<Array<number>>) => {
   const down = world[node.value.y + 1][node.value.x];
   // Left
   if (node.value.x >= 1 && fields.includes(left)) {
+
+    var finalCost = 0;
+    var finalPowerUp = {};
+
+    if (node.powerUp.type == POWERUPTYPE.STAR) {
+      finalCost = costs[1]
+      finalPowerUp = {
+        type: node.powerUp.remainingUses > 1 ? POWERUPTYPE.STAR : POWERUPTYPE.EMPTY,
+        remainingUses: node.powerUp.remainingUses - 1
+      }
+    } else if (node.powerUp.type == POWERUPTYPE.FLOWER) {
+      if (left == 5) {
+        finalCost = costs[0];
+        finalPowerUp = {
+          type: node.powerUp.remainingUses > 1 ? POWERUPTYPE.FLOWER : POWERUPTYPE.EMPTY,
+          remainingUses: node.powerUp.remainingUses - 1
+        }
+      } else {
+        finalCost = costs[0];
+        finalPowerUp = {
+          type: node.powerUp.type,
+          remainingUses: node.powerUp.remainingUses,
+        }
+      }
+    } else if(left == 5){
+      finalCost = costs[2];
+      finalPowerUp = {
+        type: node.powerUp.type,
+        remainingUses: node.powerUp.remainingUses,
+      }
+    }
     children.push({
       value: { x: node.value.x - 1, y: node.value.y },
       actions: node.actions + ACTIONS.LEFT,
       level: node.level + 1,
-      costs: node.costs + costs[0],
-      powerUp: undefined,
+      costs: node.costs + finalCost,
+      powerUp: finalPowerUp,
     });
   }
+
+
+
   // Up
   if (node.value.y >= 1 && fields.includes(up)) {
     children.push({
