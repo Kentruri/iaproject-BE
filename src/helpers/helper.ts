@@ -5,7 +5,7 @@ import { UploadedFile } from "express-fileupload";
 export enum POWERUPTYPE {
   STAR = "STAR",
   FLOWER = "FLOWER",
-  EMPTY = "EMPTY"
+  EMPTY = "EMPTY",
 }
 
 enum ACTIONS {
@@ -16,8 +16,8 @@ enum ACTIONS {
 }
 
 interface POWERUP {
-  type: POWERUPTYPE,
-  remainingUses: number,
+  type: POWERUPTYPE;
+  remainingUses: number;
 }
 
 export interface node {
@@ -81,69 +81,166 @@ interface coordinates {
 
 export const heuristics = (
   node: node["value"],
-  objective: node["value"],
+  objective: node["value"]
 ): number => {
-
   const diference = {
     x: Math.abs(objective.x - node.x),
     y: Math.abs(objective.y - node.y),
-  }
+  };
 
-  const distance = (Math.sqrt(Math.pow(diference.x, 2) + Math.pow(diference.y, 2))) / 2
-  return distance
-
-}
+  const distance =
+    Math.sqrt(Math.pow(diference.x, 2) + Math.pow(diference.y, 2)) / 2;
+  return distance;
+};
 
 //CONSTANTS
-
-const actions = ["L", "U", "R", "D"];
 const costs = [1, 0.5, 6];
-const fields = [2, 3, 4, 5, 6];
-export const error = "profe no hay solucion :'v";
+const fields = [0, 2, 3, 4, 5, 6];
+export const errorTicher = "profe no hay solucion :'v";
 export const excError = { message: "?? mande eso bien profe :'v" };
 
 //TO DO
 //Take powerup and costs from enemies
 
-export const getChildren = (node: node, world: Array<Array<number>>) => {
-  let children = [];
-  const left = world[node.value.y][node.value.x - 1];
-  const up = world[node.value.y - 1][node.value.x];
-  const right = world[node.value.y][node.value.x + 1];
-  const down = world[node.value.y + 1][node.value.x];
-  // Left
-  if (node.value.x >= 1 && fields.includes(left)) {
-
-    var finalCost = 0;
-    var finalPowerUp = {};
-
+export const getMovement = (
+  node: node,
+  field: number
+): { finalCost: number; finalPowerUp: POWERUP } => {
+  var finalCost = 0;
+  var finalPowerUp = { type: POWERUPTYPE.EMPTY, remainingUses: 0 };
+  if (field == 3) {
+    //tengo estrella, y llego a otra
     if (node.powerUp.type == POWERUPTYPE.STAR) {
-      finalCost = costs[1]
+      finalCost = costs[1];
       finalPowerUp = {
-        type: node.powerUp.remainingUses > 1 ? POWERUPTYPE.STAR : POWERUPTYPE.EMPTY,
-        remainingUses: node.powerUp.remainingUses - 1
-      }
-    } else if (node.powerUp.type == POWERUPTYPE.FLOWER) {
-      if (left == 5) {
-        finalCost = costs[0];
-        finalPowerUp = {
-          type: node.powerUp.remainingUses > 1 ? POWERUPTYPE.FLOWER : POWERUPTYPE.EMPTY,
-          remainingUses: node.powerUp.remainingUses - 1
-        }
-      } else {
-        finalCost = costs[0];
-        finalPowerUp = {
-          type: node.powerUp.type,
-          remainingUses: node.powerUp.remainingUses,
-        }
-      }
-    } else if(left == 5){
-      finalCost = costs[2];
+        type: POWERUPTYPE.STAR,
+        remainingUses: node.powerUp.remainingUses + 6 - 1,
+      };
+    }
+    //no tengo nada
+    if (node.powerUp.type == POWERUPTYPE.EMPTY) {
+      finalCost = costs[0];
+      finalPowerUp = {
+        type: POWERUPTYPE.STAR,
+        remainingUses: 6,
+      };
+    }
+    //tengo flor, y caigo en una estrella, no pasa nada
+    if (node.powerUp.type == POWERUPTYPE.FLOWER) {
+      finalCost = costs[0];
       finalPowerUp = {
         type: node.powerUp.type,
         remainingUses: node.powerUp.remainingUses,
-      }
+      };
     }
+  } else if (field == 4) {
+    //tengo flor, y llego a otra
+    if (node.powerUp.type == POWERUPTYPE.FLOWER) {
+      finalCost = costs[0];
+      finalPowerUp = {
+        type: POWERUPTYPE.FLOWER,
+        remainingUses: node.powerUp.remainingUses + 1,
+      };
+    }
+    //no tengo nada
+    if (node.powerUp.type == POWERUPTYPE.EMPTY) {
+      finalCost = costs[0];
+      finalPowerUp = {
+        type: POWERUPTYPE.FLOWER,
+        remainingUses: 1,
+      };
+    }
+    //tengo estrella, y caigo en una flor, no pasa nada, al menos que sea ultimo tiro
+    if (node.powerUp.type == POWERUPTYPE.STAR) {
+      finalCost = costs[1];
+      finalPowerUp = {
+        type:
+          node.powerUp.remainingUses - 1 > 0
+            ? POWERUPTYPE.STAR
+            : POWERUPTYPE.FLOWER,
+        remainingUses:
+          node.powerUp.remainingUses - 1 > 0
+            ? node.powerUp.remainingUses - 1
+            : 1,
+      };
+    }
+  } else if (field == 5) {
+    //tengo flor
+    if (node.powerUp.type == POWERUPTYPE.FLOWER) {
+      finalCost = costs[0];
+      finalPowerUp = {
+        type:
+          node.powerUp.remainingUses - 1 > 0
+            ? POWERUPTYPE.FLOWER
+            : POWERUPTYPE.EMPTY,
+        remainingUses: node.powerUp.remainingUses - 1,
+      };
+    }
+
+    //no tengo nada
+
+    if (node.powerUp.type == POWERUPTYPE.EMPTY) {
+      finalCost = costs[2];
+      finalPowerUp = {
+        type: POWERUPTYPE.EMPTY,
+        remainingUses: node.powerUp.remainingUses,
+      };
+    }
+
+    ///tengo estrella
+
+    if (node.powerUp.type == POWERUPTYPE.STAR) {
+      finalCost = costs[1];
+      finalPowerUp = {
+        type:
+          node.powerUp.remainingUses - 1 > 0
+            ? POWERUPTYPE.STAR
+            : POWERUPTYPE.EMPTY,
+        remainingUses: node.powerUp.remainingUses - 1,
+      };
+    }
+  } else {
+    finalCost = costs[0];
+    finalPowerUp = {
+      type: node.powerUp.type,
+      remainingUses: node.powerUp.remainingUses,
+    };
+  }
+
+  return {
+    finalCost,
+    finalPowerUp,
+  };
+};
+
+export const getChildren = (
+  node: node,
+  globalReference: { world: Array<Array<number>> }
+) => {
+  let children = [];
+
+  const left =
+    node.value.x - 1 >= 0
+      ? globalReference.world[node.value.y][node.value.x - 1]
+      : -1;
+  const up =
+    node.value.y - 1 >= 0
+      ? globalReference.world[node.value.y - 1][node.value.x]
+      : -1;
+  const right =
+    node.value.x + 1 <= globalReference.world[0].length
+      ? globalReference.world[node.value.y][node.value.x + 1]
+      : -1;
+  const down =
+    node.value.y + 1 <= globalReference.world.length
+      ? globalReference.world[node.value.y + 1][node.value.x]
+      : -1;
+  if (fields.includes(left)) {
+    const { finalCost, finalPowerUp } = getMovement(
+      node,
+      left,
+      globalReference
+    );
     children.push({
       value: { x: node.value.x - 1, y: node.value.y },
       actions: node.actions + ACTIONS.LEFT,
@@ -152,40 +249,40 @@ export const getChildren = (node: node, world: Array<Array<number>>) => {
       powerUp: finalPowerUp,
     });
   }
-
-
-
   // Up
-  if (node.value.y >= 1 && fields.includes(up)) {
+  if (fields.includes(up)) {
+    const { finalCost, finalPowerUp } = getMovement(node, up);
     children.push({
       value: { x: node.value.x, y: node.value.y - 1 },
       actions: node.actions + ACTIONS.UP,
       level: node.level + 1,
-      costs: node.costs + costs[1],
-      powerUp: undefined,
+      costs: node.costs + finalCost,
+      powerUp: finalPowerUp,
     });
   }
   // Right
-  if (node.value.x < world[0].length - 1 && fields.includes(right)) {
+  if (fields.includes(right)) {
+    const { finalCost, finalPowerUp } = getMovement(node, right);
     children.push({
       value: { x: node.value.x + 1, y: node.value.y },
       actions: node.actions + ACTIONS.RIGHT,
       level: node.level + 1,
-      costs: node.costs + costs[2],
-      powerUp: undefined,
+      costs: node.costs + finalCost,
+      powerUp: finalPowerUp,
     });
   }
   // Down
-  if (node.value.y < world.length - 1 && fields.includes(down)) {
+  if (fields.includes(down)) {
+    const { finalCost, finalPowerUp } = getMovement(node, down);
     children.push({
       value: { x: node.value.x, y: node.value.y + 1 },
       actions: node.actions + ACTIONS.DOWN,
       level: node.level + 1,
-      costs: node.costs + costs[3],
-      powerUp: undefined,
+      costs: node.costs + finalCost,
+      powerUp: finalPowerUp,
     });
   }
-
+  // console.log(children, "hey");
   return children;
 };
 
@@ -208,19 +305,19 @@ export const isSolution = (node: node, solution: node["value"]): boolean => {
 };
 
 export const hashIndex = (node: node) => {
-  return Math.floor((node.value.y * 100 + node.value.x * 3) / 5);
+  return node.value.y * 30 + node.value.x + 10;
 };
 
 export const myCoordinates = (
   world: Array<Array<number>>,
   searchTo: number
 ): coordinates | null => {
-  for (let i = 0; i < world.length - 1; i++) {
-    for (let j = 0; j < world[0].length - 1; j++) {
+  for (let i = 0; i < world.length; i++) {
+    for (let j = 0; j < world[0].length; j++) {
       if (world[i][j] == searchTo) {
         return {
-          x: i,
-          y: j,
+          x: j,
+          y: i,
         };
       } else {
       }
