@@ -105,9 +105,10 @@ export const excError = { message: "?? mande eso bien profe :'v" };
 export const getMovement = (
   node: node,
   field: number
-): { finalCost: number; finalPowerUp: POWERUP } => {
+): { finalCost: number; finalPowerUp: POWERUP; removeField: boolean } => {
   var finalCost = 0;
   var finalPowerUp = { type: POWERUPTYPE.EMPTY, remainingUses: 0 };
+  var removeField = false;
   if (field == 3) {
     //tengo estrella, y llego a otra
     if (node.powerUp.type == POWERUPTYPE.STAR) {
@@ -116,6 +117,7 @@ export const getMovement = (
         type: POWERUPTYPE.STAR,
         remainingUses: node.powerUp.remainingUses + 6 - 1,
       };
+      removeField = true;
     }
     //no tengo nada
     if (node.powerUp.type == POWERUPTYPE.EMPTY) {
@@ -124,6 +126,7 @@ export const getMovement = (
         type: POWERUPTYPE.STAR,
         remainingUses: 6,
       };
+      removeField = true;
     }
     //tengo flor, y caigo en una estrella, no pasa nada
     if (node.powerUp.type == POWERUPTYPE.FLOWER) {
@@ -141,6 +144,7 @@ export const getMovement = (
         type: POWERUPTYPE.FLOWER,
         remainingUses: node.powerUp.remainingUses + 1,
       };
+      removeField = true;
     }
     //no tengo nada
     if (node.powerUp.type == POWERUPTYPE.EMPTY) {
@@ -149,6 +153,7 @@ export const getMovement = (
         type: POWERUPTYPE.FLOWER,
         remainingUses: 1,
       };
+      removeField = true;
     }
     //tengo estrella, y caigo en una flor, no pasa nada, al menos que sea ultimo tiro
     if (node.powerUp.type == POWERUPTYPE.STAR) {
@@ -175,6 +180,7 @@ export const getMovement = (
             : POWERUPTYPE.EMPTY,
         remainingUses: node.powerUp.remainingUses - 1,
       };
+      removeField = true;
     }
 
     //no tengo nada
@@ -198,6 +204,7 @@ export const getMovement = (
             : POWERUPTYPE.EMPTY,
         remainingUses: node.powerUp.remainingUses - 1,
       };
+      removeField = true;
     }
   } else {
     finalCost = costs[0];
@@ -210,37 +217,32 @@ export const getMovement = (
   return {
     finalCost,
     finalPowerUp,
+    removeField,
   };
 };
 
 export const getChildren = (
   node: node,
-  globalReference: { world: Array<Array<number>> }
+  world: Array<Array<number>>,
+  hashTable: any
 ) => {
   let children = [];
 
   const left =
-    node.value.x - 1 >= 0
-      ? globalReference.world[node.value.y][node.value.x - 1]
-      : -1;
-  const up =
-    node.value.y - 1 >= 0
-      ? globalReference.world[node.value.y - 1][node.value.x]
-      : -1;
+    node.value.x - 1 >= 0 ? world[node.value.y][node.value.x - 1] : -1;
+  const up = node.value.y - 1 >= 0 ? world[node.value.y - 1][node.value.x] : -1;
   const right =
-    node.value.x + 1 <= globalReference.world[0].length
-      ? globalReference.world[node.value.y][node.value.x + 1]
+    node.value.x + 1 <= world[0].length
+      ? world[node.value.y][node.value.x + 1]
       : -1;
   const down =
-    node.value.y + 1 <= globalReference.world.length
-      ? globalReference.world[node.value.y + 1][node.value.x]
+    node.value.y + 1 <= world.length
+      ? world[node.value.y + 1][node.value.x]
       : -1;
+
+  //left
   if (fields.includes(left)) {
-    const { finalCost, finalPowerUp } = getMovement(
-      node,
-      left,
-      globalReference
-    );
+    const { finalCost, finalPowerUp, removeField } = getMovement(node, left);
     children.push({
       value: { x: node.value.x - 1, y: node.value.y },
       actions: node.actions + ACTIONS.LEFT,
@@ -248,10 +250,15 @@ export const getChildren = (
       costs: node.costs + finalCost,
       powerUp: finalPowerUp,
     });
+
+    if (removeField) {
+      world[node.value.y][node.value.x - 1] = 0;
+      hashTable = {};
+    }
   }
   // Up
   if (fields.includes(up)) {
-    const { finalCost, finalPowerUp } = getMovement(node, up);
+    const { finalCost, finalPowerUp, removeField } = getMovement(node, up);
     children.push({
       value: { x: node.value.x, y: node.value.y - 1 },
       actions: node.actions + ACTIONS.UP,
@@ -259,10 +266,14 @@ export const getChildren = (
       costs: node.costs + finalCost,
       powerUp: finalPowerUp,
     });
+    if (removeField) {
+      world[node.value.y - 1][node.value.x] = 0;
+      hashTable = {};
+    }
   }
   // Right
   if (fields.includes(right)) {
-    const { finalCost, finalPowerUp } = getMovement(node, right);
+    const { finalCost, finalPowerUp, removeField } = getMovement(node, right);
     children.push({
       value: { x: node.value.x + 1, y: node.value.y },
       actions: node.actions + ACTIONS.RIGHT,
@@ -270,10 +281,14 @@ export const getChildren = (
       costs: node.costs + finalCost,
       powerUp: finalPowerUp,
     });
+    if (removeField) {
+      world[node.value.y][node.value.x + 1] = 0;
+      hashTable = {};
+    }
   }
   // Down
   if (fields.includes(down)) {
-    const { finalCost, finalPowerUp } = getMovement(node, down);
+    const { finalCost, finalPowerUp, removeField } = getMovement(node, down);
     children.push({
       value: { x: node.value.x, y: node.value.y + 1 },
       actions: node.actions + ACTIONS.DOWN,
@@ -281,8 +296,12 @@ export const getChildren = (
       costs: node.costs + finalCost,
       powerUp: finalPowerUp,
     });
+    if (removeField) {
+      world[node.value.y + 1][node.value.x] = 0;
+      hashTable = {};
+    }
   }
-  // console.log(children, "hey");
+  console.log(children, "hey");
   return children;
 };
 

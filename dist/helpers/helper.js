@@ -74,6 +74,7 @@ exports.excError = { message: "?? mande eso bien profe :'v" };
 const getMovement = (node, field) => {
     var finalCost = 0;
     var finalPowerUp = { type: POWERUPTYPE.EMPTY, remainingUses: 0 };
+    var removeField = false;
     if (field == 3) {
         //tengo estrella, y llego a otra
         if (node.powerUp.type == POWERUPTYPE.STAR) {
@@ -82,6 +83,7 @@ const getMovement = (node, field) => {
                 type: POWERUPTYPE.STAR,
                 remainingUses: node.powerUp.remainingUses + 6 - 1,
             };
+            removeField = true;
         }
         //no tengo nada
         if (node.powerUp.type == POWERUPTYPE.EMPTY) {
@@ -90,6 +92,7 @@ const getMovement = (node, field) => {
                 type: POWERUPTYPE.STAR,
                 remainingUses: 6,
             };
+            removeField = true;
         }
         //tengo flor, y caigo en una estrella, no pasa nada
         if (node.powerUp.type == POWERUPTYPE.FLOWER) {
@@ -108,6 +111,7 @@ const getMovement = (node, field) => {
                 type: POWERUPTYPE.FLOWER,
                 remainingUses: node.powerUp.remainingUses + 1,
             };
+            removeField = true;
         }
         //no tengo nada
         if (node.powerUp.type == POWERUPTYPE.EMPTY) {
@@ -116,6 +120,7 @@ const getMovement = (node, field) => {
                 type: POWERUPTYPE.FLOWER,
                 remainingUses: 1,
             };
+            removeField = true;
         }
         //tengo estrella, y caigo en una flor, no pasa nada, al menos que sea ultimo tiro
         if (node.powerUp.type == POWERUPTYPE.STAR) {
@@ -140,6 +145,7 @@ const getMovement = (node, field) => {
                     : POWERUPTYPE.EMPTY,
                 remainingUses: node.powerUp.remainingUses - 1,
             };
+            removeField = true;
         }
         //no tengo nada
         if (node.powerUp.type == POWERUPTYPE.EMPTY) {
@@ -158,6 +164,7 @@ const getMovement = (node, field) => {
                     : POWERUPTYPE.EMPTY,
                 remainingUses: node.powerUp.remainingUses - 1,
             };
+            removeField = true;
         }
     }
     else {
@@ -170,25 +177,23 @@ const getMovement = (node, field) => {
     return {
         finalCost,
         finalPowerUp,
+        removeField,
     };
 };
 exports.getMovement = getMovement;
-const getChildren = (node, globalReference) => {
+const getChildren = (node, world, hashTable) => {
     let children = [];
-    const left = node.value.x - 1 >= 0
-        ? globalReference.world[node.value.y][node.value.x - 1]
+    const left = node.value.x - 1 >= 0 ? world[node.value.y][node.value.x - 1] : -1;
+    const up = node.value.y - 1 >= 0 ? world[node.value.y - 1][node.value.x] : -1;
+    const right = node.value.x + 1 <= world[0].length
+        ? world[node.value.y][node.value.x + 1]
         : -1;
-    const up = node.value.y - 1 >= 0
-        ? globalReference.world[node.value.y - 1][node.value.x]
+    const down = node.value.y + 1 <= world.length
+        ? world[node.value.y + 1][node.value.x]
         : -1;
-    const right = node.value.x + 1 <= globalReference.world[0].length
-        ? globalReference.world[node.value.y][node.value.x + 1]
-        : -1;
-    const down = node.value.y + 1 <= globalReference.world.length
-        ? globalReference.world[node.value.y + 1][node.value.x]
-        : -1;
+    //left
     if (fields.includes(left)) {
-        const { finalCost, finalPowerUp } = (0, exports.getMovement)(node, left, globalReference);
+        const { finalCost, finalPowerUp, removeField } = (0, exports.getMovement)(node, left);
         children.push({
             value: { x: node.value.x - 1, y: node.value.y },
             actions: node.actions + ACTIONS.LEFT,
@@ -196,10 +201,14 @@ const getChildren = (node, globalReference) => {
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
         });
+        if (removeField) {
+            world[node.value.y][node.value.x - 1] = 0;
+            hashTable = {};
+        }
     }
     // Up
     if (fields.includes(up)) {
-        const { finalCost, finalPowerUp } = (0, exports.getMovement)(node, up);
+        const { finalCost, finalPowerUp, removeField } = (0, exports.getMovement)(node, up);
         children.push({
             value: { x: node.value.x, y: node.value.y - 1 },
             actions: node.actions + ACTIONS.UP,
@@ -207,10 +216,14 @@ const getChildren = (node, globalReference) => {
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
         });
+        if (removeField) {
+            world[node.value.y - 1][node.value.x] = 0;
+            hashTable = {};
+        }
     }
     // Right
     if (fields.includes(right)) {
-        const { finalCost, finalPowerUp } = (0, exports.getMovement)(node, right);
+        const { finalCost, finalPowerUp, removeField } = (0, exports.getMovement)(node, right);
         children.push({
             value: { x: node.value.x + 1, y: node.value.y },
             actions: node.actions + ACTIONS.RIGHT,
@@ -218,10 +231,14 @@ const getChildren = (node, globalReference) => {
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
         });
+        if (removeField) {
+            world[node.value.y][node.value.x + 1] = 0;
+            hashTable = {};
+        }
     }
     // Down
     if (fields.includes(down)) {
-        const { finalCost, finalPowerUp } = (0, exports.getMovement)(node, down);
+        const { finalCost, finalPowerUp, removeField } = (0, exports.getMovement)(node, down);
         children.push({
             value: { x: node.value.x, y: node.value.y + 1 },
             actions: node.actions + ACTIONS.DOWN,
@@ -229,8 +246,12 @@ const getChildren = (node, globalReference) => {
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
         });
+        if (removeField) {
+            world[node.value.y + 1][node.value.x] = 0;
+            hashTable = {};
+        }
     }
-    // console.log(children, "hey");
+    console.log(children, "hey");
     return children;
 };
 exports.getChildren = getChildren;
