@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortCosts = exports.addToList = exports.removeFromStock = exports.addToStock = exports.removeFromQueue = exports.addToQueue = exports.myCoordinates = exports.hashIndex = exports.isSolution = exports.readWorld = exports.getChildren = exports.getMovement = exports.excError = exports.errorTicher = exports.heuristics = exports.POWERUPTYPE = void 0;
+exports.sortCostsHeuristic = exports.sortHeuristic = exports.sortCosts = exports.addToList = exports.removeFromStock = exports.addToStock = exports.removeFromQueue = exports.addToQueue = exports.myCoordinates = exports.hashIndex = exports.isSolution = exports.readWorld = exports.getChildren = exports.getMovement = exports.excError = exports.errorTicher = exports.heuristics = exports.POWERUPTYPE = void 0;
 //typos
 var POWERUPTYPE;
 (function (POWERUPTYPE) {
@@ -15,46 +15,6 @@ var ACTIONS;
     ACTIONS["RIGHT"] = "R";
     ACTIONS["DOWN"] = "D";
 })(ACTIONS || (ACTIONS = {}));
-//HEURISTICS
-// export const heuristics = (
-//   node: node["value"],
-//   objective: node["value"],
-//   distance: number
-// ): number => {
-//   const xIsEqual: boolean = node.x == objective.x;
-//   const yIsEqual: boolean = node.y == objective.y;
-//   if (xIsEqual && yIsEqual) {
-//     return Math.floor(distance / 2) + 0.5;
-//   }
-//   if (!xIsEqual && !yIsEqual) {
-//     return heuristics(
-//       {
-//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
-//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
-//       },
-//       objective,
-//       distance + 1
-//     );
-//   } else if (xIsEqual) {
-//     return heuristics(
-//       {
-//         x: node.x,
-//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
-//       },
-//       objective,
-//       distance + 1
-//     );
-//   } else {
-//     return heuristics(
-//       {
-//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
-//         y: node.y,
-//       },
-//       objective,
-//       distance + 1
-//     );
-//   }
-// };
 const heuristics = (node, objective) => {
     const diference = {
         x: Math.abs(objective.x - node.x),
@@ -167,6 +127,15 @@ const getMovement = (node, field) => {
             removeField = true;
         }
     }
+    else if (node.powerUp.type == POWERUPTYPE.STAR) {
+        finalCost = costs[1];
+        finalPowerUp = {
+            type: node.powerUp.remainingUses - 1 > 0
+                ? POWERUPTYPE.STAR
+                : POWERUPTYPE.EMPTY,
+            remainingUses: node.powerUp.remainingUses - 1,
+        };
+    }
     else {
         finalCost = costs[0];
         finalPowerUp = {
@@ -181,7 +150,7 @@ const getMovement = (node, field) => {
     };
 };
 exports.getMovement = getMovement;
-const getChildren = (node, world, hashTable) => {
+const getChildren = (node, world, informed = false, goal = { x: 0, y: 0 }) => {
     let children = [];
     const left = node.value.x - 1 >= 0 ? world[node.value.y][node.value.x - 1] : -1;
     const up = node.value.y - 1 >= 0 ? world[node.value.y - 1][node.value.x] : -1;
@@ -200,11 +169,9 @@ const getChildren = (node, world, hashTable) => {
             level: node.level + 1,
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
+            heuristics: informed ? (0, exports.heuristics)(node.value, goal) : undefined,
+            removeField,
         });
-        if (removeField) {
-            world[node.value.y][node.value.x - 1] = 0;
-            hashTable = {};
-        }
     }
     // Up
     if (fields.includes(up)) {
@@ -215,11 +182,9 @@ const getChildren = (node, world, hashTable) => {
             level: node.level + 1,
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
+            heuristics: informed ? (0, exports.heuristics)(node.value, goal) : undefined,
+            removeField,
         });
-        if (removeField) {
-            world[node.value.y - 1][node.value.x] = 0;
-            hashTable = {};
-        }
     }
     // Right
     if (fields.includes(right)) {
@@ -230,11 +195,9 @@ const getChildren = (node, world, hashTable) => {
             level: node.level + 1,
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
+            heuristics: informed ? (0, exports.heuristics)(node.value, goal) : undefined,
+            removeField,
         });
-        if (removeField) {
-            world[node.value.y][node.value.x + 1] = 0;
-            hashTable = {};
-        }
     }
     // Down
     if (fields.includes(down)) {
@@ -245,13 +208,10 @@ const getChildren = (node, world, hashTable) => {
             level: node.level + 1,
             costs: node.costs + finalCost,
             powerUp: finalPowerUp,
+            heuristics: informed ? (0, exports.heuristics)(node.value, goal) : undefined,
+            removeField,
         });
-        if (removeField) {
-            world[node.value.y + 1][node.value.x] = 0;
-            hashTable = {};
-        }
     }
-    console.log(children, "hey");
     return children;
 };
 exports.getChildren = getChildren;
@@ -272,7 +232,7 @@ const isSolution = (node, solution) => {
 };
 exports.isSolution = isSolution;
 const hashIndex = (node) => {
-    return node.value.y * 30 + node.value.x + 10;
+    return node.value.y * 10 + node.value.x + 10;
 };
 exports.hashIndex = hashIndex;
 const myCoordinates = (world, searchTo) => {
@@ -321,4 +281,56 @@ const sortCosts = (list) => {
     });
 };
 exports.sortCosts = sortCosts;
+const sortHeuristic = (list) => {
+    return list.sort((a, b) => {
+        return a.heuristic - b.heuristic;
+    });
+};
+exports.sortHeuristic = sortHeuristic;
+const sortCostsHeuristic = (list) => {
+    return list.sort((a, b) => {
+        return a.heuristic + a.costs - b.heuristic + b.costs;
+    });
+};
+exports.sortCostsHeuristic = sortCostsHeuristic;
+//HEURISTICS
+// export const heuristics = (
+//   node: node["value"],
+//   objective: node["value"],
+//   distance: number
+// ): number => {
+//   const xIsEqual: boolean = node.x == objective.x;
+//   const yIsEqual: boolean = node.y == objective.y;
+//   if (xIsEqual && yIsEqual) {
+//     return Math.floor(distance / 2) + 0.5;
+//   }
+//   if (!xIsEqual && !yIsEqual) {
+//     return heuristics(
+//       {
+//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
+//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   } else if (xIsEqual) {
+//     return heuristics(
+//       {
+//         x: node.x,
+//         y: node.y < objective.y ? node.y + 1 : node.y - 1,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   } else {
+//     return heuristics(
+//       {
+//         x: node.x < objective.x ? node.x + 1 : node.x - 1,
+//         y: node.y,
+//       },
+//       objective,
+//       distance + 1
+//     );
+//   }
+// };
 //# sourceMappingURL=helper.js.map
