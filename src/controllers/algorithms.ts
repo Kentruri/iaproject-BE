@@ -1,6 +1,7 @@
 import { Coordinates } from './../interfaces/Coordinates';
 import { Request, Response } from "express";
 import { TreeNode } from "interfaces/TreeNode";
+import { performance } from 'perf_hooks';
 import {
   CELL_TYPE,
   copyWorld,
@@ -43,7 +44,7 @@ export const bfsMethod = (req: Request, res: Response) => {
     let queue: TreeNode[] = [];
     queue.push(root);
 
-    var start = Date.now();
+    var start = performance.now();
     while (true) {
       if (queue.length == 0) {
         return errorTicher;
@@ -51,7 +52,7 @@ export const bfsMethod = (req: Request, res: Response) => {
         let node: TreeNode = removeFromQueue(queue);
         expandedNodes.push(node);
         if (isSolution(node, goal)) {
-          var end = Date.now();
+          var end = performance.now();
           return res.status(200).json({
             path: node.actions,
             depth: node.level,
@@ -107,7 +108,7 @@ export const ucsMethod = (req: Request, res: Response) => {
     let queue: TreeNode[] = [];
     queue.push(root);
 
-    var start = Date.now();
+    var start = performance.now();
     while (true) {
       if (queue.length == 0) {
         return errorTicher;
@@ -115,7 +116,7 @@ export const ucsMethod = (req: Request, res: Response) => {
         let node = removeFromQueue(queue);
         expandedNodes.push(node);
         if (isSolution(node, goal)) {
-          var end = Date.now();
+          var end = performance.now();
           return res.status(200).json({
             path: node.actions,
             depth: node.level,
@@ -171,7 +172,7 @@ export const dfsMethod = (req: Request, res: Response) => {
     let stack: TreeNode[] = [];
     stack.push(root);
 
-    var start = Date.now();
+    var start = performance.now();
     while (true) {
       if (stack.length == 0) {
         return errorTicher;
@@ -179,7 +180,7 @@ export const dfsMethod = (req: Request, res: Response) => {
         let node = removeFromStack(stack);
         expandedNodes.push(node);
         if (isSolution(node, goal)) {
-          var end = Date.now();
+          var end = performance.now();
           return res.status(200).json({
             path: node.actions,
             depth: node.level,
@@ -234,7 +235,7 @@ export const greedyMethod = (req: Request, res: Response) => {
     let queue: TreeNode[] = [];
     queue.push(root);
 
-    var start = Date.now();
+    var start = performance.now();
     while (true) {
       if (queue.length == 0) {
         return errorTicher;
@@ -242,7 +243,7 @@ export const greedyMethod = (req: Request, res: Response) => {
         let node = removeFromQueue(queue);
         expandedNodes.push(node);
         if (isSolution(node, goal)) {
-          var end = Date.now();
+          var end = performance.now();
           return res.status(200).json({
             path: node.actions,
             depth: node.level,
@@ -297,7 +298,7 @@ export const AstarMethod = (req: Request, res: Response) => {
     let queue: TreeNode[] = [];
     queue.push(root);
 
-    var start = Date.now();
+    var start = performance.now();
     while (true) {
       if (queue.length == 0) {
         return errorTicher;
@@ -305,7 +306,7 @@ export const AstarMethod = (req: Request, res: Response) => {
         let node = removeFromQueue(queue);
         expandedNodes.push(node);
         if (isSolution(node, goal)) {
-          var end = Date.now();
+          var end = performance.now();
           return res.status(200).json({
             path: node.actions,
             depth: node.level,
