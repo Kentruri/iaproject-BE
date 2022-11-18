@@ -1,69 +1,66 @@
+import { Coordinates } from './../interfaces/Coordinates';
 import { Request, Response } from "express";
+import { TreeNode } from "interfaces/TreeNode";
 import {
-  addToList,
-  addToQueue,
-  addToStock,
+  CELL_TYPE,
+  copyWorld,
   errorTicher,
   excError,
   getChildren,
   hashIndex,
   isSolution,
   myCoordinates,
-  node,
-  POWERUPTYPE,
+  pushOrderByCost,
   readWorld,
   removeFromQueue,
-  removeFromStock,
-  sortCosts,
-  sortCostsHeuristic,
-  sortHeuristic,
+  removeFromStack,
+  pushOrderByHeuristic,
+  pushOrderByCostHeuristic,
 } from "../helpers/helper";
 
 export const bfsMethod = (req: Request, res: Response) => {
   try {
     //@ts-ignore-next-line
     const file: UploadedFile = req.files?.textfile ?? "./empty.txt";
-    const world = readWorld(file);
-    const location = myCoordinates(world, 2) || { x: 0, y: 0 };
-    const goal = myCoordinates(world, 6);
-
-    let root: node = {
-      value: location,
+    const world: number[][] = readWorld(file);
+    const location: Coordinates = myCoordinates(world, 2);
+    const goal: Coordinates = myCoordinates(world, 6);
+    const expandedNodes: TreeNode[] = [];
+    let hashTable = {};
+    let root: TreeNode = {
       actions: "",
+      coordinates: location,
+      cost: 0,
       level: 0,
-      costs: 0,
+      status: copyWorld(world),
+      type: CELL_TYPE.INITIAL,
       powerUp: {
-        type: POWERUPTYPE.EMPTY,
-        remainingUses: 0,
-      },
-      removeField: false,
+        type: CELL_TYPE.FREE,
+        remainingUses: 0
+      }
     };
 
-    let hashTable = {};
-    let queue: Array<node> = [];
-
+    let queue: TreeNode[] = [];
     queue.push(root);
 
+    var start = Date.now();
     while (true) {
       if (queue.length == 0) {
         return errorTicher;
       } else {
-        let node = removeFromQueue(queue);
-        if (isSolution(node!, goal!!)) {
-          world.forEach((column) => {
-            console.log(column.toString(), "\n");
-          });
+        let node: TreeNode = removeFromQueue(queue);
+        expandedNodes.push(node);
+        if (isSolution(node, goal)) {
+          var end = Date.now();
           return res.status(200).json({
-            path: node?.actions,
-            depth: node?.level,
-            cost: node?.costs,
+            path: node.actions,
+            depth: node.level,
+            expandedNodes: expandedNodes.length,
+            executionTime: end - start
           });
         } else {
-          if (node?.removeField) {
-            world[node.value.y][node.value.x] = 0;
-          }
-          let children = getChildren(node!, world!);
-          children = children.filter((node: node) => {
+          let children: TreeNode[] = getChildren(node!);
+          children = children.filter(node => {
             let key = hashIndex(node!);
             //@ts-ignore
             if (!hashTable[key]) {
@@ -74,8 +71,7 @@ export const bfsMethod = (req: Request, res: Response) => {
               return false;
             }
           });
-          //creo que el mundo deberia de cambiar aca
-          addToQueue(queue, children);
+          queue.push(...children);
         }
       }
     }
@@ -84,46 +80,48 @@ export const bfsMethod = (req: Request, res: Response) => {
   }
 };
 
-export const dfsMethod = (req: Request, res: Response) => {
+export const ucsMethod = (req: Request, res: Response) => {
   try {
     //@ts-ignore-next-line
     const file: UploadedFile = req.files?.textfile ?? "./empty.txt";
-    const world = readWorld(file);
-    const location = myCoordinates(world, 2) || { x: 0, y: 0 };
-    const goal = myCoordinates(world, 6);
-    let stock = [];
+    const world: number[][] = readWorld(file);
+    const location: Coordinates = myCoordinates(world, 2);
+    const goal: Coordinates = myCoordinates(world, 6);
+    const expandedNodes: TreeNode[] = [];
     let hashTable = {};
-    let root: node = {
-      value: location,
+    let root: TreeNode = {
       actions: "",
+      coordinates: location,
+      cost: 0,
       level: 0,
-      costs: 0,
+      status: copyWorld(world),
+      type: CELL_TYPE.INITIAL,
       powerUp: {
-        type: POWERUPTYPE.EMPTY,
-        remainingUses: 0,
-      },
-      removeField: false,
+        type: CELL_TYPE.FREE,
+        remainingUses: 0
+      }
     };
+    
+    let queue: TreeNode[] = [];
+    queue.push(root);
 
-    stock.push(root);
-
+    var start = Date.now();
     while (true) {
-      if (stock.length == 0) {
+      if (queue.length == 0) {
         return errorTicher;
       } else {
-        let node = removeFromStock(stock);
-        if (node?.removeField) {
-          world[node.value.y][node.value.x] = 0;
-        }
-        if (isSolution(node!, goal!!)) {
+        let node = removeFromQueue(queue);
+        expandedNodes.push(node);
+        if (isSolution(node, goal)) {
+          var end = Date.now();
           return res.status(200).json({
-            path: node?.actions,
-            depth: node?.level,
-            cost: node?.costs,
+            path: node.actions,
+            depth: node.level,
+            expandedNodes: expandedNodes.length,
+            executionTime: end - start
           });
         } else {
-          let children = getChildren(node!, world);
-
+          let children: TreeNode[] = getChildren(node);
           children = children.filter((node) => {
             let key = hashIndex(node);
             //@ts-ignore
@@ -135,7 +133,7 @@ export const dfsMethod = (req: Request, res: Response) => {
               return false;
             }
           });
-          addToStock(stock, children);
+          pushOrderByCost(children, queue);
         }
       }
     }
@@ -144,47 +142,49 @@ export const dfsMethod = (req: Request, res: Response) => {
   }
 };
 
-export const ucsMethod = (req: Request, res: Response) => {
+export const dfsMethod = (req: Request, res: Response) => {
   try {
     //@ts-ignore-next-line
     const file: UploadedFile = req.files?.textfile ?? "./empty.txt";
-    const world = readWorld(file);
-    const location = myCoordinates(world, 2) || { x: 0, y: 0 };
-    const goal = myCoordinates(world, 6);
+    const world: number[][] = readWorld(file);
+    const location: Coordinates = myCoordinates(world, 2);
+    const goal: Coordinates = myCoordinates(world, 6);
+    const expandedNodes: TreeNode[] = [];
     let hashTable = {};
-    let list = [];
-    let root: node = {
-      value: location,
+    let root: TreeNode = {
       actions: "",
+      coordinates: location,
+      cost: 0,
       level: 0,
-      costs: 0,
+      status: copyWorld(world),
+      type: CELL_TYPE.INITIAL,
       powerUp: {
-        type: POWERUPTYPE.EMPTY,
-        remainingUses: 0,
-      },
-      removeField: false,
+        type: CELL_TYPE.FREE,
+        remainingUses: 0
+      }
     };
-    list.push(root);
+    
+    let stack: TreeNode[] = [];
+    stack.push(root);
+
+    var start = Date.now();
     while (true) {
-      if (list.length == 0) {
+      if (stack.length == 0) {
         return errorTicher;
       } else {
-        list = sortCosts(list);
-        let node = list.shift();
-        if (node?.removeField) {
-          world[node.value.y][node.value.x] = 0;
-        }
-
-        if (isSolution(node!, goal!!)) {
+        let node = removeFromStack(stack);
+        expandedNodes.push(node);
+        if (isSolution(node, goal)) {
+          var end = Date.now();
           return res.status(200).json({
-            path: node?.actions,
-            depth: node?.level,
-            cost: node?.costs,
+            path: node.actions,
+            depth: node.level,
+            expandedNodes: expandedNodes.length,
+            executionTime: end - start
           });
         } else {
-          let children = getChildren(node!, world!);
-
-          children = children.filter((node) => {
+          let children: TreeNode[] = getChildren(node);
+          children = children.filter(node => {
             let key = hashIndex(node);
             //@ts-ignore
             if (!hashTable[key]) {
@@ -195,12 +195,12 @@ export const ucsMethod = (req: Request, res: Response) => {
               return false;
             }
           });
-          addToList(list, children);
+          stack.push(...children);
         }
       }
     }
   } catch (error) {
-    res.status(400).json(excError);
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -208,44 +208,45 @@ export const greedyMethod = (req: Request, res: Response) => {
   try {
     //@ts-ignore-next-line
     const file: UploadedFile = req.files?.textfile ?? "./empty.txt";
-    const world = readWorld(file);
-    const location = myCoordinates(world, 2) || { x: 0, y: 0 };
-    const goal = myCoordinates(world, 6);
+    const world: number[][] = readWorld(file);
+    const location: Coordinates = myCoordinates(world, 2);
+    const goal: Coordinates = myCoordinates(world, 6);
+    const expandedNodes: TreeNode[] = [];
     let hashTable = {};
-    let list = [];
-    let root: node = {
-      value: location,
+    let root: TreeNode = {
       actions: "",
+      coordinates: location,
+      cost: 0,
       level: 0,
-      costs: 0,
+      status: copyWorld(world),
+      type: CELL_TYPE.INITIAL,
       powerUp: {
-        type: POWERUPTYPE.EMPTY,
-        remainingUses: 0,
+        type: CELL_TYPE.FREE,
+        remainingUses: 0
       },
-      removeField: false,
+      heuristic: 0
     };
-    list.push(root);
+
+    let queue: TreeNode[] = [];
+    queue.push(root);
+
+    var start = Date.now();
     while (true) {
-      if (list.length == 0) {
+      if (queue.length == 0) {
         return errorTicher;
       } else {
-        if (list.length > 1) {
-          list = sortHeuristic(list);
-        }
-        let node = list.shift();
-        if (node?.removeField) {
-          world[node.value.y][node.value.x] = 0;
-        }
-
-        if (isSolution(node!, goal!!)) {
+        let node = removeFromQueue(queue);
+        expandedNodes.push(node);
+        if (isSolution(node, goal)) {
+          var end = Date.now();
           return res.status(200).json({
-            path: node?.actions,
-            depth: node?.level,
-            cost: node?.costs,
+            path: node.actions,
+            depth: node.level,
+            expandedNodes: expandedNodes.length,
+            executionTime: end - start
           });
         } else {
-          let children = getChildren(node!, world!, true, goal!);
-
+          let children = getChildren(node, true, goal);
           children = children.filter((node) => {
             let key = hashIndex(node);
             //@ts-ignore
@@ -257,7 +258,7 @@ export const greedyMethod = (req: Request, res: Response) => {
               return false;
             }
           });
-          addToList(list, children);
+          pushOrderByHeuristic(children, queue);
         }
       }
     }
@@ -270,44 +271,45 @@ export const AstarMethod = (req: Request, res: Response) => {
   try {
     //@ts-ignore-next-line
     const file: UploadedFile = req.files?.textfile ?? "./empty.txt";
-    const world = readWorld(file);
-    const location = myCoordinates(world, 2) || { x: 0, y: 0 };
-    const goal = myCoordinates(world, 6);
+    const world: number[][] = readWorld(file);
+    const location: Coordinates = myCoordinates(world, 2);
+    const goal: Coordinates = myCoordinates(world, 6);
+    const expandedNodes: TreeNode[] = [];
     let hashTable = {};
-    let list = [];
-    let root: node = {
-      value: location,
+    let root: TreeNode = {
       actions: "",
+      coordinates: location,
+      cost: 0,
       level: 0,
-      costs: 0,
+      status: copyWorld(world),
+      type: CELL_TYPE.INITIAL,
       powerUp: {
-        type: POWERUPTYPE.EMPTY,
-        remainingUses: 0,
+        type: CELL_TYPE.FREE,
+        remainingUses: 0
       },
-      removeField: false,
+      heuristic: 0
     };
-    list.push(root);
+
+    let queue: TreeNode[] = [];
+    queue.push(root);
+
+    var start = Date.now();
     while (true) {
-      if (list.length == 0) {
+      if (queue.length == 0) {
         return errorTicher;
       } else {
-        if (list.length > 1) {
-          list = sortCostsHeuristic(list);
-        }
-        let node = list.shift();
-         if (node?.removeField) {
-            world[node.value.y][node.value.x] = 0;
-          }
-
-        if (isSolution(node!, goal!!)) {
+        let node = removeFromQueue(queue);
+        expandedNodes.push(node);
+        if (isSolution(node, goal)) {
+          var end = Date.now();
           return res.status(200).json({
-            path: node?.actions,
-            depth: node?.level,
-            cost: node?.costs,
+            path: node.actions,
+            depth: node.level,
+            expandedNodes: expandedNodes.length,
+            executionTime: end - start
           });
         } else {
-          let children = getChildren(node!, world!, true, goal!);
-
+          let children = getChildren(node, true, goal);
           children = children.filter((node) => {
             let key = hashIndex(node);
             //@ts-ignore
@@ -319,7 +321,7 @@ export const AstarMethod = (req: Request, res: Response) => {
               return false;
             }
           });
-          addToList(list, children);
+          pushOrderByCostHeuristic(children, queue);
         }
       }
     }
@@ -327,17 +329,3 @@ export const AstarMethod = (req: Request, res: Response) => {
     res.status(400).json(excError);
   }
 };
-
-// getMovement(
-//   {
-//     value: { x: 5, y: 4 },
-//     actions: "L",
-//     level: 4,
-//     costs: 1,
-//     powerUp: {
-//       type: POWERUPTYPE.EMPTY,
-//       remainingUses: 1,
-//     },
-//   },
-//   5
-// )
