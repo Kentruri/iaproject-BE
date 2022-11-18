@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AstarMethod = exports.greedyMethod = exports.dfsMethod = exports.ucsMethod = exports.bfsMethod = void 0;
+const perf_hooks_1 = require("perf_hooks");
 const helper_1 = require("../helpers/helper");
 const bfsMethod = (req, res) => {
     var _a, _b;
@@ -26,7 +27,7 @@ const bfsMethod = (req, res) => {
         };
         let queue = [];
         queue.push(root);
-        var start = Date.now();
+        var start = perf_hooks_1.performance.now();
         while (true) {
             if (queue.length == 0) {
                 return helper_1.errorTicher;
@@ -35,7 +36,7 @@ const bfsMethod = (req, res) => {
                 let node = (0, helper_1.removeFromQueue)(queue);
                 expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = Date.now();
+                    var end = perf_hooks_1.performance.now();
                     return res.status(200).json({
                         path: node.actions,
                         depth: node.level,
@@ -93,7 +94,7 @@ const ucsMethod = (req, res) => {
         };
         let queue = [];
         queue.push(root);
-        var start = Date.now();
+        var start = perf_hooks_1.performance.now();
         while (true) {
             if (queue.length == 0) {
                 return helper_1.errorTicher;
@@ -102,7 +103,7 @@ const ucsMethod = (req, res) => {
                 let node = (0, helper_1.removeFromQueue)(queue);
                 expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = Date.now();
+                    var end = perf_hooks_1.performance.now();
                     return res.status(200).json({
                         path: node.actions,
                         depth: node.level,
@@ -160,7 +161,7 @@ const dfsMethod = (req, res) => {
         };
         let stack = [];
         stack.push(root);
-        var start = Date.now();
+        var start = perf_hooks_1.performance.now();
         while (true) {
             if (stack.length == 0) {
                 return helper_1.errorTicher;
@@ -169,7 +170,7 @@ const dfsMethod = (req, res) => {
                 let node = (0, helper_1.removeFromStack)(stack);
                 expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = Date.now();
+                    var end = perf_hooks_1.performance.now();
                     return res.status(200).json({
                         path: node.actions,
                         depth: node.level,
@@ -226,7 +227,7 @@ const greedyMethod = (req, res) => {
         };
         let queue = [];
         queue.push(root);
-        var start = Date.now();
+        var start = perf_hooks_1.performance.now();
         while (true) {
             if (queue.length == 0) {
                 return helper_1.errorTicher;
@@ -235,7 +236,7 @@ const greedyMethod = (req, res) => {
                 let node = (0, helper_1.removeFromQueue)(queue);
                 expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = Date.now();
+                    var end = perf_hooks_1.performance.now();
                     return res.status(200).json({
                         path: node.actions,
                         depth: node.level,
@@ -292,7 +293,7 @@ const AstarMethod = (req, res) => {
         };
         let queue = [];
         queue.push(root);
-        var start = Date.now();
+        var start = perf_hooks_1.performance.now();
         while (true) {
             if (queue.length == 0) {
                 return helper_1.errorTicher;
@@ -301,7 +302,7 @@ const AstarMethod = (req, res) => {
                 let node = (0, helper_1.removeFromQueue)(queue);
                 expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = Date.now();
+                    var end = perf_hooks_1.performance.now();
                     return res.status(200).json({
                         path: node.actions,
                         depth: node.level,
