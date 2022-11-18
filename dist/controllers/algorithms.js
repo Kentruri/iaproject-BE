@@ -45,18 +45,20 @@ const bfsMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node);
-                    children = children.filter(node => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
+                    if (req.body.avoidCicle) {
+                        children = children.filter(node => {
+                            let key = (0, helper_1.hashIndex)(node);
                             //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
+                            if (!hashTable[key]) {
+                                //@ts-ignore
+                                hashTable[key] = 1;
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        });
+                    }
                     queue.push(...children);
                 }
             }
@@ -110,18 +112,20 @@ const ucsMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node);
-                    children = children.filter((node) => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
+                    if (req.body.avoidCicle) {
+                        children = children.filter((node) => {
+                            let key = (0, helper_1.hashIndex)(node);
                             //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
+                            if (!hashTable[key]) {
+                                //@ts-ignore
+                                hashTable[key] = 1;
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        });
+                    }
                     (0, helper_1.pushOrderByCost)(children, queue);
                 }
             }
