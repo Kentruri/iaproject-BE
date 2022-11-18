@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.copyWorld = exports.myCoordinates = exports.readWorld = exports.POWERUP_TYPE = exports.CELL_TYPE = void 0;
+exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.copyWorld = exports.myCoordinates = exports.readWorld = exports.CELL_TYPE = void 0;
 var CELL_TYPE;
 (function (CELL_TYPE) {
     CELL_TYPE[CELL_TYPE["FREE"] = 0] = "FREE";
@@ -11,12 +11,6 @@ var CELL_TYPE;
     CELL_TYPE[CELL_TYPE["KOOPA"] = 5] = "KOOPA";
     CELL_TYPE[CELL_TYPE["PRINCESS"] = 6] = "PRINCESS";
 })(CELL_TYPE = exports.CELL_TYPE || (exports.CELL_TYPE = {}));
-var POWERUP_TYPE;
-(function (POWERUP_TYPE) {
-    POWERUP_TYPE["STAR"] = "STAR";
-    POWERUP_TYPE["FLOWER"] = "FLOWER";
-    POWERUP_TYPE["EMPTY"] = "EMPTY";
-})(POWERUP_TYPE = exports.POWERUP_TYPE || (exports.POWERUP_TYPE = {}));
 /**
  * Convierte un archivo en una matriz para el laberinto del problema.
  * @param file Archivo que recibe el servicio desde el front
@@ -275,6 +269,76 @@ function heuristics(node, objective) {
 exports.heuristics = heuristics;
 ;
 /**
+ * Encuentra la posición en la que debe agregarse un objeto dentro de un arreglo ordenado por costo & heurística y que no dañe el orden
+ * @param queue Lista ordeanda
+ * @param node Nodo a insertar
+ * @param realIndex Al estar particionando la cola, con este parámetro se persiste el índice realmente necesario
+ * @returns Ubicación que debe tener el nodo
+ */
+function findIndexCostHeu(queue, node, realIndex = 0) {
+    let index = Math.round(queue.length / 2);
+    if (!queue.length || queue[0].cost + queue[0].heuristic >= node.cost + node.heuristic) {
+        return realIndex;
+    }
+    else if (queue[queue.length - 1].cost + queue[queue.length - 1].heuristic <= node.cost + node.heuristic) {
+        return queue.length + realIndex;
+    }
+    else if (queue[index].cost + queue[index].heuristic == node.cost + node.heuristic) {
+        return index + realIndex;
+    }
+    else if (queue[index].cost + queue[index].heuristic > node.cost + node.heuristic) {
+        return findIndexCostHeu(queue.slice(0, index), node, realIndex);
+    }
+    else {
+        realIndex += index;
+        return findIndexCostHeu(queue.slice(index, queue.length), node, realIndex);
+    }
+}
+exports.findIndexCostHeu = findIndexCostHeu;
+//typos
+var ACTIONS;
+(function (ACTIONS) {
+    ACTIONS["LEFT"] = "L";
+    ACTIONS["UP"] = "U";
+    ACTIONS["RIGHT"] = "R";
+    ACTIONS["DOWN"] = "D";
+})(ACTIONS || (ACTIONS = {}));
+//CONSTANTS
+const fields = [0, 2, 3, 4, 5, 6];
+exports.errorTicher = "profe no hay solucion :'v";
+exports.excError = { message: "?? mande eso bien profe :'v" };
+//Methods
+const hashIndex = (node) => {
+    return node.coordinates.y * 10 + node.coordinates.x + 10;
+};
+exports.hashIndex = hashIndex;
+//Data structures, here I put the methods from queue's,heaps,etc
+/**
+ * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
+ * @param queue Nodos en espera
+ * @returns Nodo que será procesado
+ */
+function removeFromQueue(queue) {
+    const nodeSacado = queue.shift();
+    if (nodeSacado !== undefined)
+        return nodeSacado;
+    throw exports.errorTicher;
+}
+exports.removeFromQueue = removeFromQueue;
+;
+/**
+ * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
+ * @param queue Nodos en espera
+ * @returns Nodo que será procesado
+ */
+const removeFromStack = (stock) => {
+    const nodeSacado = stock.pop();
+    if (nodeSacado !== undefined)
+        return nodeSacado;
+    throw exports.errorTicher;
+};
+exports.removeFromStack = removeFromStack;
+/**
  * Inserta un nuevo nodo en una fila que esté ordeanada por costo manteniendo ese mismo orden
  * @param children Lista de nodos para insertar
  * @param queue Fila que debería estar ya ordenada
@@ -364,74 +428,4 @@ function pushOrderByCostHeuristic(children, queue) {
     });
 }
 exports.pushOrderByCostHeuristic = pushOrderByCostHeuristic;
-/**
- * Encuentra la posición en la que debe agregarse un objeto dentro de un arreglo ordenado por costo & heurística y que no dañe el orden
- * @param queue Lista ordeanda
- * @param node Nodo a insertar
- * @param realIndex Al estar particionando la cola, con este parámetro se persiste el índice realmente necesario
- * @returns Ubicación que debe tener el nodo
- */
-function findIndexCostHeu(queue, node, realIndex = 0) {
-    let index = Math.round(queue.length / 2);
-    if (!queue.length || queue[0].cost + queue[0].heuristic >= node.cost + node.heuristic) {
-        return realIndex;
-    }
-    else if (queue[queue.length - 1].cost + queue[queue.length - 1].heuristic <= node.cost + node.heuristic) {
-        return queue.length + realIndex;
-    }
-    else if (queue[index].cost + queue[index].heuristic == node.cost + node.heuristic) {
-        return index + realIndex;
-    }
-    else if (queue[index].cost + queue[index].heuristic > node.cost + node.heuristic) {
-        return findIndexCostHeu(queue.slice(0, index), node, realIndex);
-    }
-    else {
-        realIndex += index;
-        return findIndexCostHeu(queue.slice(index, queue.length), node, realIndex);
-    }
-}
-exports.findIndexCostHeu = findIndexCostHeu;
-//typos
-var ACTIONS;
-(function (ACTIONS) {
-    ACTIONS["LEFT"] = "L";
-    ACTIONS["UP"] = "U";
-    ACTIONS["RIGHT"] = "R";
-    ACTIONS["DOWN"] = "D";
-})(ACTIONS || (ACTIONS = {}));
-//CONSTANTS
-const fields = [0, 2, 3, 4, 5, 6];
-exports.errorTicher = "profe no hay solucion :'v";
-exports.excError = { message: "?? mande eso bien profe :'v" };
-//Methods
-const hashIndex = (node) => {
-    return node.coordinates.y * 10 + node.coordinates.x + 10;
-};
-exports.hashIndex = hashIndex;
-//Data structures, here I put the methods from queue's,heaps,etc
-/**
- * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
- * @param queue Nodos en espera
- * @returns Nodo que será procesado
- */
-function removeFromQueue(queue) {
-    const nodeSacado = queue.shift();
-    if (nodeSacado !== undefined)
-        return nodeSacado;
-    throw exports.errorTicher;
-}
-exports.removeFromQueue = removeFromQueue;
-;
-/**
- * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
- * @param queue Nodos en espera
- * @returns Nodo que será procesado
- */
-const removeFromStack = (stock) => {
-    const nodeSacado = stock.pop();
-    if (nodeSacado !== undefined)
-        return nodeSacado;
-    throw exports.errorTicher;
-};
-exports.removeFromStack = removeFromStack;
 //# sourceMappingURL=helper.js.map

@@ -12,12 +12,6 @@ export enum CELL_TYPE {
   PRINCESS = 6
 }
 
-export enum POWERUP_TYPE {
-  STAR = "STAR",
-  FLOWER = "FLOWER",
-  EMPTY = "EMPTY",
-}
-
 /**
  * Convierte un archivo en una matriz para el laberinto del problema.
  * @param file Archivo que recibe el servicio desde el front
@@ -274,11 +268,77 @@ export function heuristics(node: TreeNode["coordinates"], objective: TreeNode["c
 };
 
 /**
+ * Encuentra la posición en la que debe agregarse un objeto dentro de un arreglo ordenado por costo & heurística y que no dañe el orden
+ * @param queue Lista ordeanda
+ * @param node Nodo a insertar
+ * @param realIndex Al estar particionando la cola, con este parámetro se persiste el índice realmente necesario
+ * @returns Ubicación que debe tener el nodo
+ */
+ export function findIndexCostHeu(queue: TreeNode[], node: TreeNode, realIndex: number = 0): number {
+  let index = Math.round(queue.length / 2);
+  if (!queue.length || queue[0].cost + queue[0].heuristic! >=  node.cost + node.heuristic!) {
+    return realIndex;
+  } else if (queue[queue.length - 1].cost + queue[queue.length - 1].heuristic! <= node.cost + node.heuristic!) {
+    return queue.length + realIndex;
+  } else if (queue[index].cost + queue[index].heuristic! == node.cost + node.heuristic!) {
+    return index + realIndex;
+  } else if (queue[index].cost + queue[index].heuristic! > node.cost + node.heuristic!) {
+    return findIndexCostHeu(queue.slice(0, index), node, realIndex);
+  } else {
+    realIndex += index;
+    return findIndexCostHeu(queue.slice(index, queue.length), node, realIndex);
+  }
+}
+
+//typos
+enum ACTIONS {
+  LEFT = "L",
+  UP = "U",
+  RIGHT = "R",
+  DOWN = "D",
+}
+
+//CONSTANTS
+const fields = [0, 2, 3, 4, 5, 6];
+export const errorTicher = "profe no hay solucion :'v";
+export const excError = { message: "?? mande eso bien profe :'v" };
+
+//Methods
+export const hashIndex = (node: TreeNode) => {
+  return node.coordinates.y * 10 + node.coordinates.x + 10 ;
+};
+
+//Data structures, here I put the methods from queue's,heaps,etc
+/**
+ * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
+ * @param queue Nodos en espera
+ * @returns Nodo que será procesado
+ */
+export function removeFromQueue (queue: TreeNode[]): TreeNode {
+  const nodeSacado: TreeNode | undefined =  queue.shift();
+  if (nodeSacado !== undefined) return nodeSacado;
+  throw errorTicher;
+};
+
+/**
+ * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
+ * @param queue Nodos en espera
+ * @returns Nodo que será procesado
+ */
+export const removeFromStack = (stock: TreeNode[]) => {
+  const nodeSacado: TreeNode | undefined = stock.pop();
+  if (nodeSacado !== undefined) return nodeSacado;
+  throw errorTicher;
+};
+
+
+
+/**
  * Inserta un nuevo nodo en una fila que esté ordeanada por costo manteniendo ese mismo orden
  * @param children Lista de nodos para insertar
  * @param queue Fila que debería estar ya ordenada
  */
-export function pushOrderByCost(children: TreeNode[], queue: TreeNode[]): void {
+ export function pushOrderByCost(children: TreeNode[], queue: TreeNode[]): void {
   children.forEach(node => {
     let index = findIndexCost(queue, node);
     queue.splice(index, 0, node);
@@ -354,69 +414,3 @@ export function findIndexCost(queue: TreeNode[], node: TreeNode, realIndex: numb
     queue.splice(index, 0, node);
   });
 }
-
-/**
- * Encuentra la posición en la que debe agregarse un objeto dentro de un arreglo ordenado por costo & heurística y que no dañe el orden
- * @param queue Lista ordeanda
- * @param node Nodo a insertar
- * @param realIndex Al estar particionando la cola, con este parámetro se persiste el índice realmente necesario
- * @returns Ubicación que debe tener el nodo
- */
- export function findIndexCostHeu(queue: TreeNode[], node: TreeNode, realIndex: number = 0): number {
-  let index = Math.round(queue.length / 2);
-  if (!queue.length || queue[0].cost + queue[0].heuristic! >=  node.cost + node.heuristic!) {
-    return realIndex;
-  } else if (queue[queue.length - 1].cost + queue[queue.length - 1].heuristic! <= node.cost + node.heuristic!) {
-    return queue.length + realIndex;
-  } else if (queue[index].cost + queue[index].heuristic! == node.cost + node.heuristic!) {
-    return index + realIndex;
-  } else if (queue[index].cost + queue[index].heuristic! > node.cost + node.heuristic!) {
-    return findIndexCostHeu(queue.slice(0, index), node, realIndex);
-  } else {
-    realIndex += index;
-    return findIndexCostHeu(queue.slice(index, queue.length), node, realIndex);
-  }
-}
-
-//typos
-enum ACTIONS {
-  LEFT = "L",
-  UP = "U",
-  RIGHT = "R",
-  DOWN = "D",
-}
-
-//CONSTANTS
-const fields = [0, 2, 3, 4, 5, 6];
-export const errorTicher = "profe no hay solucion :'v";
-export const excError = { message: "?? mande eso bien profe :'v" };
-
-//Methods
-export const hashIndex = (node: TreeNode) => {
-  return node.coordinates.y * 10 + node.coordinates.x + 10 ;
-};
-
-
-
-//Data structures, here I put the methods from queue's,heaps,etc
-/**
- * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
- * @param queue Nodos en espera
- * @returns Nodo que será procesado
- */
-export function removeFromQueue (queue: TreeNode[]): TreeNode {
-  const nodeSacado: TreeNode | undefined =  queue.shift();
-  if (nodeSacado !== undefined) return nodeSacado;
-  throw errorTicher;
-};
-
-/**
- * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
- * @param queue Nodos en espera
- * @returns Nodo que será procesado
- */
-export const removeFromStack = (stock: TreeNode[]) => {
-  const nodeSacado: TreeNode | undefined = stock.pop();
-  if (nodeSacado !== undefined) return nodeSacado;
-  throw errorTicher;
-};
