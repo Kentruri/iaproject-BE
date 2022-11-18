@@ -60,17 +60,19 @@ export const bfsMethod = (req: Request, res: Response) => {
           });
         } else {
           let children: TreeNode[] = getChildren(node!);
-          children = children.filter(node => {
-            let key = hashIndex(node!);
-            //@ts-ignore
-            if (!hashTable[key]) {
+          if (req.body.avoidCicle) {
+            children = children.filter(node => {
+              let key = hashIndex(node!);
               //@ts-ignore
-              hashTable[key] = 1;
-              return true;
-            } else {
-              return false;
-            }
-          });
+              if (!hashTable[key]) {
+                //@ts-ignore
+                hashTable[key] = 1;
+                return true;
+              } else {
+                return false;
+              }
+            });
+          }
           queue.push(...children);
         }
       }
@@ -122,17 +124,19 @@ export const ucsMethod = (req: Request, res: Response) => {
           });
         } else {
           let children: TreeNode[] = getChildren(node);
-          children = children.filter((node) => {
-            let key = hashIndex(node);
-            //@ts-ignore
-            if (!hashTable[key]) {
+          if (req.body.avoidCicle) {
+            children = children.filter((node) => {
+              let key = hashIndex(node);
               //@ts-ignore
-              hashTable[key] = 1;
-              return true;
-            } else {
-              return false;
-            }
-          });
+              if (!hashTable[key]) {
+                //@ts-ignore
+                hashTable[key] = 1;
+                return true;
+              } else {
+                return false;
+              }
+            });
+          }
           pushOrderByCost(children, queue);
         }
       }
