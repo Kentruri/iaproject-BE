@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AstarMethod = exports.greedyMethod = exports.ucsMethod = exports.dfsMethod = exports.bfsMethod = void 0;
+exports.AstarMethod = exports.greedyMethod = exports.dfsMethod = exports.ucsMethod = exports.bfsMethod = void 0;
 const helper_1 = require("../helpers/helper");
 const bfsMethod = (req, res) => {
     var _a, _b;
@@ -8,44 +8,44 @@ const bfsMethod = (req, res) => {
         //@ts-ignore-next-line
         const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
         const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2) || { x: 0, y: 0 };
+        const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
-        let root = {
-            value: location,
-            actions: "",
-            level: 0,
-            costs: 0,
-            powerUp: {
-                type: helper_1.POWERUPTYPE.EMPTY,
-                remainingUses: 0,
-            },
-            removeField: false,
-        };
+        const expandedNodes = [];
         let hashTable = {};
+        let root = {
+            actions: "",
+            coordinates: location,
+            cost: 0,
+            level: 0,
+            status: (0, helper_1.copyWorld)(world),
+            type: helper_1.CELL_TYPE.INITIAL,
+            powerUp: {
+                type: helper_1.CELL_TYPE.FREE,
+                remainingUses: 0
+            }
+        };
         let queue = [];
         queue.push(root);
+        var start = Date.now();
         while (true) {
             if (queue.length == 0) {
                 return helper_1.errorTicher;
             }
             else {
                 let node = (0, helper_1.removeFromQueue)(queue);
+                expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
-                    world.forEach((column) => {
-                        console.log(column.toString(), "\n");
-                    });
+                    var end = Date.now();
                     return res.status(200).json({
-                        path: node === null || node === void 0 ? void 0 : node.actions,
-                        depth: node === null || node === void 0 ? void 0 : node.level,
-                        cost: node === null || node === void 0 ? void 0 : node.costs,
+                        path: node.actions,
+                        depth: node.level,
+                        expandedNodes: expandedNodes.length,
+                        executionTime: end - start
                     });
                 }
                 else {
-                    if (node === null || node === void 0 ? void 0 : node.removeField) {
-                        world[node.value.y][node.value.x] = 0;
-                    }
-                    let children = (0, helper_1.getChildren)(node, world);
-                    children = children.filter((node) => {
+                    let children = (0, helper_1.getChildren)(node);
+                    children = children.filter(node => {
                         let key = (0, helper_1.hashIndex)(node);
                         //@ts-ignore
                         if (!hashTable[key]) {
@@ -57,8 +57,7 @@ const bfsMethod = (req, res) => {
                             return false;
                         }
                     });
-                    //creo que el mundo deberia de cambiar aca
-                    (0, helper_1.addToQueue)(queue, children);
+                    queue.push(...children);
                 }
             }
         }
@@ -68,46 +67,49 @@ const bfsMethod = (req, res) => {
     }
 };
 exports.bfsMethod = bfsMethod;
-const dfsMethod = (req, res) => {
+const ucsMethod = (req, res) => {
     var _a, _b;
     try {
         //@ts-ignore-next-line
         const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
         const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2) || { x: 0, y: 0 };
+        const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
-        let stock = [];
+        const expandedNodes = [];
         let hashTable = {};
         let root = {
-            value: location,
             actions: "",
+            coordinates: location,
+            cost: 0,
             level: 0,
-            costs: 0,
+            status: (0, helper_1.copyWorld)(world),
+            type: helper_1.CELL_TYPE.INITIAL,
             powerUp: {
-                type: helper_1.POWERUPTYPE.EMPTY,
-                remainingUses: 0,
-            },
-            removeField: false,
+                type: helper_1.CELL_TYPE.FREE,
+                remainingUses: 0
+            }
         };
-        stock.push(root);
+        let queue = [];
+        queue.push(root);
+        var start = Date.now();
         while (true) {
-            if (stock.length == 0) {
+            if (queue.length == 0) {
                 return helper_1.errorTicher;
             }
             else {
-                let node = (0, helper_1.removeFromStock)(stock);
-                if (node === null || node === void 0 ? void 0 : node.removeField) {
-                    world[node.value.y][node.value.x] = 0;
-                }
+                let node = (0, helper_1.removeFromQueue)(queue);
+                expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
+                    var end = Date.now();
                     return res.status(200).json({
-                        path: node === null || node === void 0 ? void 0 : node.actions,
-                        depth: node === null || node === void 0 ? void 0 : node.level,
-                        cost: node === null || node === void 0 ? void 0 : node.costs,
+                        path: node.actions,
+                        depth: node.level,
+                        expandedNodes: expandedNodes.length,
+                        executionTime: end - start
                     });
                 }
                 else {
-                    let children = (0, helper_1.getChildren)(node, world);
+                    let children = (0, helper_1.getChildren)(node);
                     children = children.filter((node) => {
                         let key = (0, helper_1.hashIndex)(node);
                         //@ts-ignore
@@ -120,7 +122,72 @@ const dfsMethod = (req, res) => {
                             return false;
                         }
                     });
-                    (0, helper_1.addToStock)(stock, children);
+                    (0, helper_1.pushOrderByCost)(children, queue);
+                }
+            }
+        }
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+exports.ucsMethod = ucsMethod;
+const dfsMethod = (req, res) => {
+    var _a, _b;
+    try {
+        //@ts-ignore-next-line
+        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
+        const world = (0, helper_1.readWorld)(file);
+        const location = (0, helper_1.myCoordinates)(world, 2);
+        const goal = (0, helper_1.myCoordinates)(world, 6);
+        const expandedNodes = [];
+        let hashTable = {};
+        let root = {
+            actions: "",
+            coordinates: location,
+            cost: 0,
+            level: 0,
+            status: (0, helper_1.copyWorld)(world),
+            type: helper_1.CELL_TYPE.INITIAL,
+            powerUp: {
+                type: helper_1.CELL_TYPE.FREE,
+                remainingUses: 0
+            }
+        };
+        let stack = [];
+        stack.push(root);
+        var start = Date.now();
+        while (true) {
+            if (stack.length == 0) {
+                return helper_1.errorTicher;
+            }
+            else {
+                let node = (0, helper_1.removeFromStack)(stack);
+                expandedNodes.push(node);
+                if ((0, helper_1.isSolution)(node, goal)) {
+                    var end = Date.now();
+                    return res.status(200).json({
+                        path: node.actions,
+                        depth: node.level,
+                        expandedNodes: expandedNodes.length,
+                        executionTime: end - start
+                    });
+                }
+                else {
+                    let children = (0, helper_1.getChildren)(node);
+                    children = children.filter(node => {
+                        let key = (0, helper_1.hashIndex)(node);
+                        //@ts-ignore
+                        if (!hashTable[key]) {
+                            //@ts-ignore
+                            hashTable[key] = 1;
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    });
+                    stack.push(...children);
                 }
             }
         }
@@ -130,112 +197,50 @@ const dfsMethod = (req, res) => {
     }
 };
 exports.dfsMethod = dfsMethod;
-const ucsMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2) || { x: 0, y: 0 };
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        let hashTable = {};
-        let list = [];
-        let root = {
-            value: location,
-            actions: "",
-            level: 0,
-            costs: 0,
-            powerUp: {
-                type: helper_1.POWERUPTYPE.EMPTY,
-                remainingUses: 0,
-            },
-            removeField: false,
-        };
-        list.push(root);
-        while (true) {
-            if (list.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                list = (0, helper_1.sortCosts)(list);
-                let node = list.shift();
-                if (node === null || node === void 0 ? void 0 : node.removeField) {
-                    world[node.value.y][node.value.x] = 0;
-                }
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    return res.status(200).json({
-                        path: node === null || node === void 0 ? void 0 : node.actions,
-                        depth: node === null || node === void 0 ? void 0 : node.level,
-                        cost: node === null || node === void 0 ? void 0 : node.costs,
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node, world);
-                    children = children.filter((node) => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
-                            //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
-                    (0, helper_1.addToList)(list, children);
-                }
-            }
-        }
-    }
-    catch (error) {
-        res.status(400).json(helper_1.excError);
-    }
-};
-exports.ucsMethod = ucsMethod;
 const greedyMethod = (req, res) => {
     var _a, _b;
     try {
         //@ts-ignore-next-line
         const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
         const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2) || { x: 0, y: 0 };
+        const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
+        const expandedNodes = [];
         let hashTable = {};
-        let list = [];
         let root = {
-            value: location,
             actions: "",
+            coordinates: location,
+            cost: 0,
             level: 0,
-            costs: 0,
+            status: (0, helper_1.copyWorld)(world),
+            type: helper_1.CELL_TYPE.INITIAL,
             powerUp: {
-                type: helper_1.POWERUPTYPE.EMPTY,
-                remainingUses: 0,
+                type: helper_1.CELL_TYPE.FREE,
+                remainingUses: 0
             },
-            removeField: false,
+            heuristic: 0
         };
-        list.push(root);
+        let queue = [];
+        queue.push(root);
+        var start = Date.now();
         while (true) {
-            if (list.length == 0) {
+            if (queue.length == 0) {
                 return helper_1.errorTicher;
             }
             else {
-                if (list.length > 1) {
-                    list = (0, helper_1.sortHeuristic)(list);
-                }
-                let node = list.shift();
-                if (node === null || node === void 0 ? void 0 : node.removeField) {
-                    world[node.value.y][node.value.x] = 0;
-                }
+                let node = (0, helper_1.removeFromQueue)(queue);
+                expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
+                    var end = Date.now();
                     return res.status(200).json({
-                        path: node === null || node === void 0 ? void 0 : node.actions,
-                        depth: node === null || node === void 0 ? void 0 : node.level,
-                        cost: node === null || node === void 0 ? void 0 : node.costs,
+                        path: node.actions,
+                        depth: node.level,
+                        expandedNodes: expandedNodes.length,
+                        executionTime: end - start
                     });
                 }
                 else {
-                    let children = (0, helper_1.getChildren)(node, world, true, goal);
+                    let children = (0, helper_1.getChildren)(node, true, goal);
                     children = children.filter((node) => {
                         let key = (0, helper_1.hashIndex)(node);
                         //@ts-ignore
@@ -248,7 +253,7 @@ const greedyMethod = (req, res) => {
                             return false;
                         }
                     });
-                    (0, helper_1.addToList)(list, children);
+                    (0, helper_1.pushOrderByHeuristic)(children, queue);
                 }
             }
         }
@@ -264,43 +269,44 @@ const AstarMethod = (req, res) => {
         //@ts-ignore-next-line
         const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
         const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2) || { x: 0, y: 0 };
+        const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
+        const expandedNodes = [];
         let hashTable = {};
-        let list = [];
         let root = {
-            value: location,
             actions: "",
+            coordinates: location,
+            cost: 0,
             level: 0,
-            costs: 0,
+            status: (0, helper_1.copyWorld)(world),
+            type: helper_1.CELL_TYPE.INITIAL,
             powerUp: {
-                type: helper_1.POWERUPTYPE.EMPTY,
-                remainingUses: 0,
+                type: helper_1.CELL_TYPE.FREE,
+                remainingUses: 0
             },
-            removeField: false,
+            heuristic: 0
         };
-        list.push(root);
+        let queue = [];
+        queue.push(root);
+        var start = Date.now();
         while (true) {
-            if (list.length == 0) {
+            if (queue.length == 0) {
                 return helper_1.errorTicher;
             }
             else {
-                if (list.length > 1) {
-                    list = (0, helper_1.sortCostsHeuristic)(list);
-                }
-                let node = list.shift();
-                if (node === null || node === void 0 ? void 0 : node.removeField) {
-                    world[node.value.y][node.value.x] = 0;
-                }
+                let node = (0, helper_1.removeFromQueue)(queue);
+                expandedNodes.push(node);
                 if ((0, helper_1.isSolution)(node, goal)) {
+                    var end = Date.now();
                     return res.status(200).json({
-                        path: node === null || node === void 0 ? void 0 : node.actions,
-                        depth: node === null || node === void 0 ? void 0 : node.level,
-                        cost: node === null || node === void 0 ? void 0 : node.costs,
+                        path: node.actions,
+                        depth: node.level,
+                        expandedNodes: expandedNodes.length,
+                        executionTime: end - start
                     });
                 }
                 else {
-                    let children = (0, helper_1.getChildren)(node, world, true, goal);
+                    let children = (0, helper_1.getChildren)(node, true, goal);
                     children = children.filter((node) => {
                         let key = (0, helper_1.hashIndex)(node);
                         //@ts-ignore
@@ -313,7 +319,7 @@ const AstarMethod = (req, res) => {
                             return false;
                         }
                     });
-                    (0, helper_1.addToList)(list, children);
+                    (0, helper_1.pushOrderByCostHeuristic)(children, queue);
                 }
             }
         }
@@ -323,17 +329,4 @@ const AstarMethod = (req, res) => {
     }
 };
 exports.AstarMethod = AstarMethod;
-// getMovement(
-//   {
-//     value: { x: 5, y: 4 },
-//     actions: "L",
-//     level: 4,
-//     costs: 1,
-//     powerUp: {
-//       type: POWERUPTYPE.EMPTY,
-//       remainingUses: 1,
-//     },
-//   },
-//   5
-// )
 //# sourceMappingURL=algorithms.js.map
