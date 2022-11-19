@@ -8,7 +8,6 @@ import {
   errorTicher,
   excError,
   getChildren,
-  hashIndex,
   isSolution,
   myCoordinates,
   pushOrderByCost,
@@ -17,6 +16,7 @@ import {
   removeFromStack,
   pushOrderByHeuristic,
   pushOrderByCostHeuristic,
+  filterNoExploredNodes,
 } from "../helpers/helper";
 
 export const bfsMethod = (req: Request, res: Response) => {
@@ -27,11 +27,11 @@ export const bfsMethod = (req: Request, res: Response) => {
     const location: Coordinates = myCoordinates(world, 2);
     const goal: Coordinates = myCoordinates(world, 6);
     const expandedNodes: TreeNode[] = [];
-    let hashTable = {};
     let root: TreeNode = {
       actions: "",
       coordinates: location,
       cost: 0,
+      hashTable: {},
       level: 0,
       status: copyWorld(world),
       type: CELL_TYPE.INITIAL,
@@ -61,19 +61,7 @@ export const bfsMethod = (req: Request, res: Response) => {
           });
         } else {
           let children: TreeNode[] = getChildren(node!);
-          if (req.body.avoidCicle) {
-            children = children.filter(node => {
-              let key = hashIndex(node!);
-              //@ts-ignore
-              if (!hashTable[key]) {
-                //@ts-ignore
-                hashTable[key] = 1;
-                return true;
-              } else {
-                return false;
-              }
-            });
-          }
+          if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
           queue.push(...children);
         }
       }
@@ -91,11 +79,11 @@ export const ucsMethod = (req: Request, res: Response) => {
     const location: Coordinates = myCoordinates(world, 2);
     const goal: Coordinates = myCoordinates(world, 6);
     const expandedNodes: TreeNode[] = [];
-    let hashTable = {};
     let root: TreeNode = {
       actions: "",
       coordinates: location,
       cost: 0,
+      hashTable: {},
       level: 0,
       status: copyWorld(world),
       type: CELL_TYPE.INITIAL,
@@ -125,19 +113,7 @@ export const ucsMethod = (req: Request, res: Response) => {
           });
         } else {
           let children: TreeNode[] = getChildren(node);
-          if (req.body.avoidCicle) {
-            children = children.filter((node) => {
-              let key = hashIndex(node);
-              //@ts-ignore
-              if (!hashTable[key]) {
-                //@ts-ignore
-                hashTable[key] = 1;
-                return true;
-              } else {
-                return false;
-              }
-            });
-          }
+          if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
           pushOrderByCost(children, queue);
         }
       }
@@ -155,12 +131,12 @@ export const dfsMethod = (req: Request, res: Response) => {
     const location: Coordinates = myCoordinates(world, 2);
     const goal: Coordinates = myCoordinates(world, 6);
     const expandedNodes: TreeNode[] = [];
-    let hashTable = {};
     let root: TreeNode = {
       actions: "",
       coordinates: location,
       cost: 0,
       level: 0,
+      hashTable: {},
       status: copyWorld(world),
       type: CELL_TYPE.INITIAL,
       powerUp: {
@@ -189,17 +165,7 @@ export const dfsMethod = (req: Request, res: Response) => {
           });
         } else {
           let children: TreeNode[] = getChildren(node);
-          children = children.filter(node => {
-            let key = hashIndex(node);
-            //@ts-ignore
-            if (!hashTable[key]) {
-              //@ts-ignore
-              hashTable[key] = 1;
-              return true;
-            } else {
-              return false;
-            }
-          });
+          children = filterNoExploredNodes(node, children);
           stack.push(...children);
         }
       }
@@ -217,11 +183,11 @@ export const greedyMethod = (req: Request, res: Response) => {
     const location: Coordinates = myCoordinates(world, 2);
     const goal: Coordinates = myCoordinates(world, 6);
     const expandedNodes: TreeNode[] = [];
-    let hashTable = {};
     let root: TreeNode = {
       actions: "",
       coordinates: location,
       cost: 0,
+      hashTable: {},
       level: 0,
       status: copyWorld(world),
       type: CELL_TYPE.INITIAL,
@@ -252,17 +218,7 @@ export const greedyMethod = (req: Request, res: Response) => {
           });
         } else {
           let children = getChildren(node, true, goal);
-          children = children.filter((node) => {
-            let key = hashIndex(node);
-            //@ts-ignore
-            if (!hashTable[key]) {
-              //@ts-ignore
-              hashTable[key] = 1;
-              return true;
-            } else {
-              return false;
-            }
-          });
+          children = filterNoExploredNodes(node, children);
           pushOrderByHeuristic(children, queue);
         }
       }
@@ -280,11 +236,11 @@ export const AstarMethod = (req: Request, res: Response) => {
     const location: Coordinates = myCoordinates(world, 2);
     const goal: Coordinates = myCoordinates(world, 6);
     const expandedNodes: TreeNode[] = [];
-    let hashTable = {};
     let root: TreeNode = {
       actions: "",
       coordinates: location,
       cost: 0,
+      hashTable: {},
       level: 0,
       status: copyWorld(world),
       type: CELL_TYPE.INITIAL,
@@ -315,17 +271,7 @@ export const AstarMethod = (req: Request, res: Response) => {
           });
         } else {
           let children = getChildren(node, true, goal);
-          children = children.filter((node) => {
-            let key = hashIndex(node);
-            //@ts-ignore
-            if (!hashTable[key]) {
-              //@ts-ignore
-              hashTable[key] = 1;
-              return true;
-            } else {
-              return false;
-            }
-          });
+          children = filterNoExploredNodes(node, children);
           pushOrderByCostHeuristic(children, queue);
         }
       }

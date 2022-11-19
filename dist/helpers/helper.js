@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.copyWorld = exports.myCoordinates = exports.readWorld = exports.CELL_TYPE = void 0;
+exports.filterNoExploredNodes = exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.copyWorld = exports.myCoordinates = exports.readWorld = exports.CELL_TYPE = void 0;
 var CELL_TYPE;
 (function (CELL_TYPE) {
     CELL_TYPE[CELL_TYPE["FREE"] = 0] = "FREE";
@@ -315,27 +315,39 @@ exports.hashIndex = hashIndex;
 //Data structures, here I put the methods from queue's,heaps,etc
 /**
  * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
+ * Como ya será expandido deja el rastro en la tabla hash para no tener la posibilidad de que regrese a ese punto
  * @param queue Nodos en espera
  * @returns Nodo que será procesado
  */
 function removeFromQueue(queue) {
     const nodeSacado = queue.shift();
-    if (nodeSacado !== undefined)
+    if (nodeSacado !== undefined) {
+        let key = (0, exports.hashIndex)(nodeSacado);
+        nodeSacado.hashTable[key] = 1;
         return nodeSacado;
-    throw exports.errorTicher;
+    }
+    else {
+        throw exports.errorTicher;
+    }
 }
 exports.removeFromQueue = removeFromQueue;
 ;
 /**
  * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
+ * Como ya será expandido deja el rastro en la tabla hash para no tener la posibilidad de que regrese a ese punto
  * @param queue Nodos en espera
  * @returns Nodo que será procesado
  */
 const removeFromStack = (stock) => {
     const nodeSacado = stock.pop();
-    if (nodeSacado !== undefined)
+    if (nodeSacado !== undefined) {
+        let key = (0, exports.hashIndex)(nodeSacado);
+        nodeSacado.hashTable[key] = 1;
         return nodeSacado;
-    throw exports.errorTicher;
+    }
+    else {
+        throw exports.errorTicher;
+    }
 };
 exports.removeFromStack = removeFromStack;
 /**
@@ -428,4 +440,8 @@ function pushOrderByCostHeuristic(children, queue) {
     });
 }
 exports.pushOrderByCostHeuristic = pushOrderByCostHeuristic;
+function filterNoExploredNodes(actualNode, children) {
+    return children.filter(node => !actualNode.hashTable[(0, exports.hashIndex)(node)]);
+}
+exports.filterNoExploredNodes = filterNoExploredNodes;
 //# sourceMappingURL=helper.js.map
