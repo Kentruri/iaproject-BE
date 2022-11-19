@@ -25,4 +25,7 @@ export interface TreeNode {
 
   // Costo acumulado
   cost: number;
+
+  // Tabla hash para llevar el rastro de los recorrido
+  hashTable: { [key: number]: number }
 }

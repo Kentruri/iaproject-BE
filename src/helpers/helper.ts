@@ -110,7 +110,7 @@ export function getChildren(node: TreeNode, informed = false, goal = { x: 0, y: 
     childNode.actions = node.actions + ACTIONS.RIGHT,
     childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
     children.push(childNode);
-  }
+  } 
   return children;
 };
 
@@ -304,31 +304,43 @@ export const errorTicher = "profe no hay solucion :'v";
 export const excError = { message: "?? mande eso bien profe :'v" };
 
 //Methods
-export const hashIndex = (node: TreeNode) => {
+export const hashIndex = (node: TreeNode): number => {
   return node.coordinates.y * 10 + node.coordinates.x + 10 ;
 };
 
 //Data structures, here I put the methods from queue's,heaps,etc
 /**
  * Devuelve el nodo que será expandido a la vez de que lo quita de la cola
+ * Como ya será expandido deja el rastro en la tabla hash para no tener la posibilidad de que regrese a ese punto
  * @param queue Nodos en espera
  * @returns Nodo que será procesado
  */
 export function removeFromQueue (queue: TreeNode[]): TreeNode {
   const nodeSacado: TreeNode | undefined =  queue.shift();
-  if (nodeSacado !== undefined) return nodeSacado;
-  throw errorTicher;
+  if (nodeSacado !== undefined) {
+    let key: number = hashIndex(nodeSacado);
+    nodeSacado.hashTable[key] = 1;
+    return nodeSacado;
+  } else {
+    throw errorTicher;
+  }
 };
 
 /**
  * Devuelve el nodo que será expandido a la vez de que lo quita de la pila
+ * Como ya será expandido deja el rastro en la tabla hash para no tener la posibilidad de que regrese a ese punto
  * @param queue Nodos en espera
  * @returns Nodo que será procesado
  */
 export const removeFromStack = (stock: TreeNode[]) => {
   const nodeSacado: TreeNode | undefined = stock.pop();
-  if (nodeSacado !== undefined) return nodeSacado;
-  throw errorTicher;
+  if (nodeSacado !== undefined) {
+    let key: number = hashIndex(nodeSacado);
+    nodeSacado.hashTable[key] = 1;
+    return nodeSacado;
+  } else {
+    throw errorTicher;
+  }
 };
 
 
@@ -413,4 +425,8 @@ export function findIndexCost(queue: TreeNode[], node: TreeNode, realIndex: numb
     let index = findIndexCostHeu(queue, node);
     queue.splice(index, 0, node);
   });
+}
+
+export function filterNoExploredNodes(actualNode: TreeNode, children: TreeNode[]): TreeNode[] {
+  return children.filter(node => !actualNode.hashTable[hashIndex(node)]);
 }

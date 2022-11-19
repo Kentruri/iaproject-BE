@@ -12,11 +12,11 @@ const bfsMethod = (req, res) => {
         const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
         const expandedNodes = [];
-        let hashTable = {};
         let root = {
             actions: "",
             coordinates: location,
             cost: 0,
+            hashTable: {},
             level: 0,
             status: (0, helper_1.copyWorld)(world),
             type: helper_1.CELL_TYPE.INITIAL,
@@ -46,20 +46,8 @@ const bfsMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node);
-                    if (req.body.avoidCicle) {
-                        children = children.filter(node => {
-                            let key = (0, helper_1.hashIndex)(node);
-                            //@ts-ignore
-                            if (!hashTable[key]) {
-                                //@ts-ignore
-                                hashTable[key] = 1;
-                                return true;
-                            }
-                            else {
-                                return false;
-                            }
-                        });
-                    }
+                    if (req.body.avoidCicle)
+                        children = (0, helper_1.filterNoExploredNodes)(node, children);
                     queue.push(...children);
                 }
             }
@@ -79,11 +67,11 @@ const ucsMethod = (req, res) => {
         const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
         const expandedNodes = [];
-        let hashTable = {};
         let root = {
             actions: "",
             coordinates: location,
             cost: 0,
+            hashTable: {},
             level: 0,
             status: (0, helper_1.copyWorld)(world),
             type: helper_1.CELL_TYPE.INITIAL,
@@ -113,20 +101,8 @@ const ucsMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node);
-                    if (req.body.avoidCicle) {
-                        children = children.filter((node) => {
-                            let key = (0, helper_1.hashIndex)(node);
-                            //@ts-ignore
-                            if (!hashTable[key]) {
-                                //@ts-ignore
-                                hashTable[key] = 1;
-                                return true;
-                            }
-                            else {
-                                return false;
-                            }
-                        });
-                    }
+                    if (req.body.avoidCicle)
+                        children = (0, helper_1.filterNoExploredNodes)(node, children);
                     (0, helper_1.pushOrderByCost)(children, queue);
                 }
             }
@@ -146,12 +122,12 @@ const dfsMethod = (req, res) => {
         const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
         const expandedNodes = [];
-        let hashTable = {};
         let root = {
             actions: "",
             coordinates: location,
             cost: 0,
             level: 0,
+            hashTable: {},
             status: (0, helper_1.copyWorld)(world),
             type: helper_1.CELL_TYPE.INITIAL,
             powerUp: {
@@ -180,18 +156,7 @@ const dfsMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node);
-                    children = children.filter(node => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
-                            //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
+                    children = (0, helper_1.filterNoExploredNodes)(node, children);
                     stack.push(...children);
                 }
             }
@@ -211,11 +176,11 @@ const greedyMethod = (req, res) => {
         const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
         const expandedNodes = [];
-        let hashTable = {};
         let root = {
             actions: "",
             coordinates: location,
             cost: 0,
+            hashTable: {},
             level: 0,
             status: (0, helper_1.copyWorld)(world),
             type: helper_1.CELL_TYPE.INITIAL,
@@ -246,18 +211,7 @@ const greedyMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node, true, goal);
-                    children = children.filter((node) => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
-                            //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
+                    children = (0, helper_1.filterNoExploredNodes)(node, children);
                     (0, helper_1.pushOrderByHeuristic)(children, queue);
                 }
             }
@@ -277,11 +231,11 @@ const AstarMethod = (req, res) => {
         const location = (0, helper_1.myCoordinates)(world, 2);
         const goal = (0, helper_1.myCoordinates)(world, 6);
         const expandedNodes = [];
-        let hashTable = {};
         let root = {
             actions: "",
             coordinates: location,
             cost: 0,
+            hashTable: {},
             level: 0,
             status: (0, helper_1.copyWorld)(world),
             type: helper_1.CELL_TYPE.INITIAL,
@@ -312,18 +266,7 @@ const AstarMethod = (req, res) => {
                 }
                 else {
                     let children = (0, helper_1.getChildren)(node, true, goal);
-                    children = children.filter((node) => {
-                        let key = (0, helper_1.hashIndex)(node);
-                        //@ts-ignore
-                        if (!hashTable[key]) {
-                            //@ts-ignore
-                            hashTable[key] = 1;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    });
+                    children = (0, helper_1.filterNoExploredNodes)(node, children);
                     (0, helper_1.pushOrderByCostHeuristic)(children, queue);
                 }
             }
