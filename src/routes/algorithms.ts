@@ -6,13 +6,14 @@ import {
   greedyMethod,
 } from "../controllers/algorithms";
 import { Router } from "express";
+import parseFile from "../middlewares/parseFile";
 
 const router = Router();
 
-router.post("/informed/bfs", bfsMethod);
-router.post("/informed/ucs", ucsMethod);
-router.post("/informed/dfs", dfsMethod);
-router.post("/uninformed/Astar", AstarMethod);
-router.post("/uninformed/greedy", greedyMethod);
+router.post("/informed/bfs", parseFile, bfsMethod);
+router.post("/informed/ucs", parseFile, ucsMethod);
+router.post("/informed/dfs", parseFile, dfsMethod);
+router.post("/uninformed/Astar", parseFile, AstarMethod);
+router.post("/uninformed/greedy", parseFile, greedyMethod);
 
 export default router;

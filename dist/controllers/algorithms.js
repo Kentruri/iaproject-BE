@@ -4,276 +4,136 @@ exports.AstarMethod = exports.greedyMethod = exports.dfsMethod = exports.ucsMeth
 const perf_hooks_1 = require("perf_hooks");
 const helper_1 = require("../helpers/helper");
 const bfsMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2);
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        const expandedNodes = [];
-        let root = {
-            actions: "",
-            coordinates: location,
-            cost: 0,
-            hashTable: {},
-            level: 0,
-            status: (0, helper_1.copyWorld)(world),
-            type: helper_1.CELL_TYPE.INITIAL,
-            powerUp: {
-                type: helper_1.CELL_TYPE.FREE,
-                remainingUses: 0
-            }
-        };
-        let queue = [];
-        queue.push(root);
-        var start = perf_hooks_1.performance.now();
-        while (true) {
-            if (queue.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                let node = (0, helper_1.removeFromQueue)(queue);
-                expandedNodes.push(node);
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = perf_hooks_1.performance.now();
-                    return res.status(200).json({
-                        path: node.actions,
-                        depth: node.level,
-                        expandedNodes: expandedNodes.length,
-                        executionTime: end - start
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node);
-                    if (req.body.avoidCicle)
-                        children = (0, helper_1.filterNoExploredNodes)(node, children);
-                    queue.push(...children);
-                }
-            }
+    const root = req.rootNode;
+    const goal = req.goal;
+    const queue = [root];
+    const expandedNodes = [];
+    var start = perf_hooks_1.performance.now();
+    while (queue.length > 0) {
+        const node = (0, helper_1.removeFromQueue)(queue);
+        expandedNodes.push(node);
+        if ((0, helper_1.isSolution)(node, goal)) {
+            var end = perf_hooks_1.performance.now();
+            return res.status(200).json({
+                path: node.actions,
+                depth: node.level,
+                expandedNodes: expandedNodes.length,
+                executionTime: end - start
+            });
         }
-    }
-    catch (e) {
-        res.status(400).json({ message: e.message });
+        else {
+            let children = (0, helper_1.getChildren)(node);
+            if (req.body.avoidCicle)
+                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            queue.push(...children);
+        }
     }
 };
 exports.bfsMethod = bfsMethod;
 const ucsMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2);
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        const expandedNodes = [];
-        let root = {
-            actions: "",
-            coordinates: location,
-            cost: 0,
-            hashTable: {},
-            level: 0,
-            status: (0, helper_1.copyWorld)(world),
-            type: helper_1.CELL_TYPE.INITIAL,
-            powerUp: {
-                type: helper_1.CELL_TYPE.FREE,
-                remainingUses: 0
-            }
-        };
-        let queue = [];
-        queue.push(root);
-        var start = perf_hooks_1.performance.now();
-        while (true) {
-            if (queue.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                let node = (0, helper_1.removeFromQueue)(queue);
-                expandedNodes.push(node);
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = perf_hooks_1.performance.now();
-                    return res.status(200).json({
-                        path: node.actions,
-                        depth: node.level,
-                        expandedNodes: expandedNodes.length,
-                        executionTime: end - start
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node);
-                    if (req.body.avoidCicle)
-                        children = (0, helper_1.filterNoExploredNodes)(node, children);
-                    (0, helper_1.pushOrderByCost)(children, queue);
-                }
-            }
+    const root = req.rootNode;
+    const goal = req.goal;
+    const queue = [root];
+    const expandedNodes = [];
+    var start = perf_hooks_1.performance.now();
+    while (queue.length > 0) {
+        const node = (0, helper_1.removeFromQueue)(queue);
+        expandedNodes.push(node);
+        if ((0, helper_1.isSolution)(node, goal)) {
+            var end = perf_hooks_1.performance.now();
+            return res.status(200).json({
+                path: node.actions,
+                depth: node.level,
+                expandedNodes: expandedNodes.length,
+                executionTime: end - start
+            });
         }
-    }
-    catch (error) {
-        res.status(400).json({ message: error.message });
+        else {
+            let children = (0, helper_1.getChildren)(node);
+            if (req.body.avoidCicle)
+                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            (0, helper_1.pushOrderByCost)(children, queue);
+        }
     }
 };
 exports.ucsMethod = ucsMethod;
 const dfsMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2);
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        const expandedNodes = [];
-        let root = {
-            actions: "",
-            coordinates: location,
-            cost: 0,
-            level: 0,
-            hashTable: {},
-            status: (0, helper_1.copyWorld)(world),
-            type: helper_1.CELL_TYPE.INITIAL,
-            powerUp: {
-                type: helper_1.CELL_TYPE.FREE,
-                remainingUses: 0
-            }
-        };
-        let stack = [];
-        stack.push(root);
-        var start = perf_hooks_1.performance.now();
-        while (true) {
-            if (stack.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                let node = (0, helper_1.removeFromStack)(stack);
-                expandedNodes.push(node);
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = perf_hooks_1.performance.now();
-                    return res.status(200).json({
-                        path: node.actions,
-                        depth: node.level,
-                        expandedNodes: expandedNodes.length,
-                        executionTime: end - start
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node);
-                    children = (0, helper_1.filterNoExploredNodes)(node, children);
-                    stack.push(...children);
-                }
-            }
+    const root = req.rootNode;
+    const goal = req.goal;
+    const stack = [root];
+    const expandedNodes = [];
+    var start = perf_hooks_1.performance.now();
+    while (stack.length > 0) {
+        const node = (0, helper_1.removeFromStack)(stack);
+        expandedNodes.push(node);
+        if ((0, helper_1.isSolution)(node, goal)) {
+            var end = perf_hooks_1.performance.now();
+            return res.status(200).json({
+                path: node.actions,
+                depth: node.level,
+                expandedNodes: expandedNodes.length,
+                executionTime: end - start
+            });
         }
-    }
-    catch (error) {
-        res.status(400).json({ message: error.message });
+        else {
+            let children = (0, helper_1.getChildren)(node);
+            children = (0, helper_1.filterNoExploredNodes)(node, children);
+            stack.push(...children);
+        }
     }
 };
 exports.dfsMethod = dfsMethod;
 const greedyMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2);
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        const expandedNodes = [];
-        let root = {
-            actions: "",
-            coordinates: location,
-            cost: 0,
-            hashTable: {},
-            level: 0,
-            status: (0, helper_1.copyWorld)(world),
-            type: helper_1.CELL_TYPE.INITIAL,
-            powerUp: {
-                type: helper_1.CELL_TYPE.FREE,
-                remainingUses: 0
-            },
-            heuristic: 0
-        };
-        let queue = [];
-        queue.push(root);
-        var start = perf_hooks_1.performance.now();
-        while (true) {
-            if (queue.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                let node = (0, helper_1.removeFromQueue)(queue);
-                expandedNodes.push(node);
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = perf_hooks_1.performance.now();
-                    return res.status(200).json({
-                        path: node.actions,
-                        depth: node.level,
-                        expandedNodes: expandedNodes.length,
-                        executionTime: end - start
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node, true, goal);
-                    children = (0, helper_1.filterNoExploredNodes)(node, children);
-                    (0, helper_1.pushOrderByHeuristic)(children, queue);
-                }
-            }
+    const root = req.rootNode;
+    const goal = req.goal;
+    const queue = [root];
+    const expandedNodes = [];
+    var start = perf_hooks_1.performance.now();
+    while (queue.length > 0) {
+        let node = (0, helper_1.removeFromQueue)(queue);
+        expandedNodes.push(node);
+        if ((0, helper_1.isSolution)(node, goal)) {
+            var end = perf_hooks_1.performance.now();
+            return res.status(200).json({
+                path: node.actions,
+                depth: node.level,
+                expandedNodes: expandedNodes.length,
+                executionTime: end - start
+            });
         }
-    }
-    catch (error) {
-        res.status(400).json(helper_1.excError);
+        else {
+            let children = (0, helper_1.getChildren)(node, true, goal);
+            if (req.body.avoidCicle)
+                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            (0, helper_1.pushOrderByHeuristic)(children, queue);
+        }
     }
 };
 exports.greedyMethod = greedyMethod;
 const AstarMethod = (req, res) => {
-    var _a, _b;
-    try {
-        //@ts-ignore-next-line
-        const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.textfile) !== null && _b !== void 0 ? _b : "./empty.txt";
-        const world = (0, helper_1.readWorld)(file);
-        const location = (0, helper_1.myCoordinates)(world, 2);
-        const goal = (0, helper_1.myCoordinates)(world, 6);
-        const expandedNodes = [];
-        let root = {
-            actions: "",
-            coordinates: location,
-            cost: 0,
-            hashTable: {},
-            level: 0,
-            status: (0, helper_1.copyWorld)(world),
-            type: helper_1.CELL_TYPE.INITIAL,
-            powerUp: {
-                type: helper_1.CELL_TYPE.FREE,
-                remainingUses: 0
-            },
-            heuristic: 0
-        };
-        let queue = [];
-        queue.push(root);
-        var start = perf_hooks_1.performance.now();
-        while (true) {
-            if (queue.length == 0) {
-                return helper_1.errorTicher;
-            }
-            else {
-                let node = (0, helper_1.removeFromQueue)(queue);
-                expandedNodes.push(node);
-                if ((0, helper_1.isSolution)(node, goal)) {
-                    var end = perf_hooks_1.performance.now();
-                    return res.status(200).json({
-                        path: node.actions,
-                        depth: node.level,
-                        expandedNodes: expandedNodes.length,
-                        executionTime: end - start
-                    });
-                }
-                else {
-                    let children = (0, helper_1.getChildren)(node, true, goal);
-                    children = (0, helper_1.filterNoExploredNodes)(node, children);
-                    (0, helper_1.pushOrderByCostHeuristic)(children, queue);
-                }
-            }
+    const root = req.rootNode;
+    const goal = req.goal;
+    const queue = [root];
+    const expandedNodes = [];
+    var start = perf_hooks_1.performance.now();
+    while (queue.length > 0) {
+        let node = (0, helper_1.removeFromQueue)(queue);
+        expandedNodes.push(node);
+        if ((0, helper_1.isSolution)(node, goal)) {
+            var end = perf_hooks_1.performance.now();
+            return res.status(200).json({
+                path: node.actions,
+                depth: node.level,
+                expandedNodes: expandedNodes.length,
+                executionTime: end - start
+            });
         }
-    }
-    catch (error) {
-        res.status(400).json(helper_1.excError);
+        else {
+            let children = (0, helper_1.getChildren)(node, true, goal);
+            if (req.body.avoidCicle)
+                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            (0, helper_1.pushOrderByCostHeuristic)(children, queue);
+        }
     }
 };
 exports.AstarMethod = AstarMethod;

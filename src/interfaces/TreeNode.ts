@@ -21,7 +21,7 @@ export interface TreeNode {
   powerUp: PowerUp;
 
   // Heurística
-  heuristic?: number;
+  heuristic: number;
 
   // Costo acumulado
   cost: number;

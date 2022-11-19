@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.filterNoExploredNodes = exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.copyWorld = exports.myCoordinates = exports.readWorld = exports.CELL_TYPE = void 0;
+exports.filterNoExploredNodes = exports.pushOrderByCostHeuristic = exports.findIndexHeu = exports.pushOrderByHeuristic = exports.findIndexCost = exports.pushOrderByCost = exports.removeFromStack = exports.removeFromQueue = exports.hashIndex = exports.excError = exports.errorTicher = exports.findIndexCostHeu = exports.heuristics = exports.checkCell = exports.getMovement = exports.getChildren = exports.isSolution = exports.CELL_TYPE = void 0;
 var CELL_TYPE;
 (function (CELL_TYPE) {
     CELL_TYPE[CELL_TYPE["FREE"] = 0] = "FREE";
@@ -11,53 +11,6 @@ var CELL_TYPE;
     CELL_TYPE[CELL_TYPE["KOOPA"] = 5] = "KOOPA";
     CELL_TYPE[CELL_TYPE["PRINCESS"] = 6] = "PRINCESS";
 })(CELL_TYPE = exports.CELL_TYPE || (exports.CELL_TYPE = {}));
-/**
- * Convierte un archivo en una matriz para el laberinto del problema.
- * @param file Archivo que recibe el servicio desde el front
- * @returns Matriz que corresponde al laberinto del problema
- */
-function readWorld(file) {
-    const Buffer = file.data.toString("utf8");
-    const columns = Buffer.split("\r\n");
-    const world = [];
-    columns.forEach(column => {
-        let columnToNum = column.split(" ").map(Number);
-        world.push(columnToNum);
-    });
-    return world;
-}
-exports.readWorld = readWorld;
-;
-/**
-/**
- * Encuentra la posición (x,y) en el laberinto para un número dado.
- * @param world Laberinto
- * @param searchTo Número a buscar
- * @returns Interfaz con los valores
- */
-const myCoordinates = (world, searchTo) => {
-    let coordinates = { x: 0, y: 0 };
-    for (let i = 0; i < world.length; i++) {
-        for (let j = 0; j < world[0].length; j++) {
-            if (world[i][j] == searchTo) {
-                coordinates = { x: j, y: i, };
-            }
-        }
-    }
-    return coordinates;
-};
-exports.myCoordinates = myCoordinates;
-/**
- * Hace una copia profunda del laberinto para llevar el estado en cada nodo
- * @param world Laberinto
- * @returns Copia exacta del laberinto pero en diferente posición de memoria
- */
-function copyWorld(world) {
-    const worldString = JSON.stringify(world);
-    return JSON.parse(worldString);
-}
-exports.copyWorld = copyWorld;
-;
 /**
  * Verifica si Mario ya llegó donde la princesa
  * @param node Posición actual de Mario
@@ -88,28 +41,28 @@ function getChildren(node, informed = false, goal = { x: 0, y: 0 }) {
         const childNode = getMovement(node, up);
         childNode.coordinates = { x: node.coordinates.x, y: node.coordinates.y - 1 },
             childNode.actions = node.actions + ACTIONS.UP,
-            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
             children.push(childNode);
     }
     if (fields.includes(down)) {
         const childNode = getMovement(node, down);
         childNode.coordinates = { x: node.coordinates.x, y: node.coordinates.y + 1 },
             childNode.actions = node.actions + ACTIONS.DOWN,
-            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
             children.push(childNode);
     }
     if (fields.includes(left)) {
         const childNode = getMovement(node, left);
         childNode.coordinates = { x: node.coordinates.x - 1, y: node.coordinates.y };
         childNode.actions = node.actions + ACTIONS.LEFT;
-        childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined;
+        childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0;
         children.push(childNode);
     }
     if (fields.includes(right)) {
         const childNode = getMovement(node, right);
         childNode.coordinates = { x: node.coordinates.x + 1, y: node.coordinates.y },
             childNode.actions = node.actions + ACTIONS.RIGHT,
-            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+            childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
             children.push(childNode);
     }
     return children;

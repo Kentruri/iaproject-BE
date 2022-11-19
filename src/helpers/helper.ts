@@ -13,51 +13,6 @@ export enum CELL_TYPE {
 }
 
 /**
- * Convierte un archivo en una matriz para el laberinto del problema.
- * @param file Archivo que recibe el servicio desde el front
- * @returns Matriz que corresponde al laberinto del problema
- */
- export function readWorld(file: UploadedFile): number[][] {
-  const Buffer = file.data.toString("utf8");
-  const columns = Buffer.split("\r\n");
-  const world: number[][] = [];
-  columns.forEach(column => {
-    let columnToNum: number[] = column.split(" ").map(Number);
-    world.push(columnToNum);
-  });
-  return world;
-};
-
-/**
-/** 
- * Encuentra la posición (x,y) en el laberinto para un número dado.
- * @param world Laberinto
- * @param searchTo Número a buscar
- * @returns Interfaz con los valores
- */
-export const myCoordinates = (world: number[][], searchTo: number): Coordinates => {
-  let coordinates: Coordinates = {x: 0, y: 0};
-  for (let i = 0; i < world.length; i++) {
-    for (let j = 0; j < world[0].length; j++) {
-      if (world[i][j] == searchTo) {
-        coordinates = { x: j, y: i,};
-      }
-    }
-  }
-  return coordinates;
-};
-
-/**
- * Hace una copia profunda del laberinto para llevar el estado en cada nodo
- * @param world Laberinto
- * @returns Copia exacta del laberinto pero en diferente posición de memoria
- */
- export function copyWorld(world: number[][]): number[][] {
-  const worldString: string = JSON.stringify(world);
-  return JSON.parse(worldString);
-};
-
-/**
  * Verifica si Mario ya llegó donde la princesa
  * @param node Posición actual de Mario
  * @param solution Posición de la princesa
@@ -87,28 +42,28 @@ export function getChildren(node: TreeNode, informed = false, goal = { x: 0, y: 
     const childNode: TreeNode = getMovement(node, up);
     childNode.coordinates = { x: node.coordinates.x, y: node.coordinates.y - 1 },
     childNode.actions = node.actions + ACTIONS.UP,
-    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
     children.push(childNode);
   }
   if (fields.includes(down)) {
     const childNode: TreeNode = getMovement(node, down);
     childNode.coordinates = { x: node.coordinates.x, y: node.coordinates.y + 1 },
     childNode.actions = node.actions + ACTIONS.DOWN,
-    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
     children.push(childNode);
   }
   if (fields.includes(left)) {
     const childNode: TreeNode = getMovement(node, left);
     childNode.coordinates = { x: node.coordinates.x - 1, y: node.coordinates.y };
     childNode.actions = node.actions + ACTIONS.LEFT;
-    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined;
+    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0;
     children.push(childNode);
   }
   if (fields.includes(right)) {
     const childNode: TreeNode = getMovement(node, right);
     childNode.coordinates = { x: node.coordinates.x + 1, y: node.coordinates.y },
     childNode.actions = node.actions + ACTIONS.RIGHT,
-    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : undefined,
+    childNode.heuristic = informed ? heuristics(childNode.coordinates, goal) : 0,
     children.push(childNode);
   } 
   return children;
