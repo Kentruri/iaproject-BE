@@ -23,8 +23,7 @@ const bfsMethod = (req, res) => {
         }
         else {
             let children = (0, helper_1.getChildren)(node);
-            if (req.body.avoidCicle)
-                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            children = (0, helper_1.filterNoExploredNodes)(node, children);
             queue.push(...children);
         }
     }
@@ -50,8 +49,7 @@ const ucsMethod = (req, res) => {
         }
         else {
             let children = (0, helper_1.getChildren)(node);
-            if (req.body.avoidCicle)
-                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            children = (0, helper_1.filterNoExploredNodes)(node, children);
             (0, helper_1.pushOrderByCost)(children, queue);
         }
     }
@@ -103,8 +101,7 @@ const greedyMethod = (req, res) => {
         }
         else {
             let children = (0, helper_1.getChildren)(node, true, goal);
-            if (req.body.avoidCicle)
-                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            children = (0, helper_1.filterNoExploredNodes)(node, children);
             (0, helper_1.pushOrderByHeuristic)(children, queue);
         }
     }
@@ -130,8 +127,7 @@ const AstarMethod = (req, res) => {
         }
         else {
             let children = (0, helper_1.getChildren)(node, true, goal);
-            if (req.body.avoidCicle)
-                children = (0, helper_1.filterNoExploredNodes)(node, children);
+            children = (0, helper_1.filterNoExploredNodes)(node, children);
             (0, helper_1.pushOrderByCostHeuristic)(children, queue);
         }
     }

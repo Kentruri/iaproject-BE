@@ -33,7 +33,7 @@ export const bfsMethod = (req: Request, res: Response) => {
       });
     } else {
       let children: TreeNode[] = getChildren(node!);
-      if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
+      children = filterNoExploredNodes(node, children);
       queue.push(...children);
     }
   }
@@ -59,7 +59,7 @@ export const ucsMethod = (req: Request, res: Response) => {
       });
     } else {
       let children: TreeNode[] = getChildren(node);
-      if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
+      children = filterNoExploredNodes(node, children);
       pushOrderByCost(children, queue);
     }
   }
@@ -111,7 +111,7 @@ export const greedyMethod = (req: Request, res: Response) => {
       });
     } else {
       let children = getChildren(node, true, goal);
-      if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
+      children = filterNoExploredNodes(node, children);
       pushOrderByHeuristic(children, queue);
     }
   }
@@ -137,7 +137,7 @@ export const AstarMethod = (req: Request, res: Response) => {
       });
     } else {
       let children = getChildren(node, true, goal);
-      if (req.body.avoidCicle) children = filterNoExploredNodes(node, children);
+      children = filterNoExploredNodes(node, children);
       pushOrderByCostHeuristic(children, queue);
     }
   }

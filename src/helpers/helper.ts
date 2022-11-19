@@ -83,26 +83,28 @@ export function getMovement(node: TreeNode, field: number): TreeNode {
     case CELL_TYPE.STAR:
       //tengo estrella, y llego a otra
       if (node.powerUp.type == CELL_TYPE.STAR) {
-        childNode.cost = node.cost! + costs[1];
+        childNode.cost = node.cost + costs[1];
+        childNode.hashTable = {};
         childNode.powerUp = {
           type: CELL_TYPE.STAR,
-          remainingUses: node.powerUp!.remainingUses + 6 - 1
+          remainingUses: node.powerUp.remainingUses + 6 - 1
         }
       }
       //no tengo nada
       if (node.powerUp.type == CELL_TYPE.FREE) {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
+        childNode.hashTable = {};
         childNode.powerUp = {
           type: CELL_TYPE.STAR,
-          remainingUses: node.powerUp!.remainingUses + 6
+          remainingUses: node.powerUp.remainingUses + 6
         }
       }
       //tengo flor, y caigo en una estrella, no pasa nada
       if (node.powerUp.type == CELL_TYPE.FLOWER) {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
         childNode.powerUp = {
           type: CELL_TYPE.FLOWER,
-          remainingUses: node.powerUp!.remainingUses,
+          remainingUses: node.powerUp.remainingUses,
         };
       }
       checkCell(childNode);
@@ -111,15 +113,17 @@ export function getMovement(node: TreeNode, field: number): TreeNode {
     case CELL_TYPE.FLOWER:
       //tengo flor, y llego a otra
       if (node.powerUp.type == CELL_TYPE.FLOWER) {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
+        childNode.hashTable = {};
         childNode.powerUp = {
           type: CELL_TYPE.FLOWER,
-          remainingUses: node.powerUp!.remainingUses + 1,
+          remainingUses: node.powerUp.remainingUses + 1,
         };
       }
       //no tengo nada
       if (node.powerUp.type == CELL_TYPE.FREE) {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
+        childNode.hashTable = {};
         childNode.powerUp = {
           type: CELL_TYPE.FLOWER,
           remainingUses: 1,
@@ -127,17 +131,19 @@ export function getMovement(node: TreeNode, field: number): TreeNode {
       }
       //tengo estrella, y caigo en una flor, no pasa nada, a menos que sea ultimo tiro
       if (node.powerUp.type == CELL_TYPE.STAR) {
-        childNode.cost = node.cost! + costs[1];
+        childNode.cost = node.cost + costs[1];
         childNode.powerUp = {
           type:
-            node.powerUp!.remainingUses - 1 > 0
+            node.powerUp.remainingUses - 1 > 0
               ? CELL_TYPE.STAR
               : CELL_TYPE.FLOWER,
           remainingUses:
-            node.powerUp!.remainingUses - 1 > 0
-              ? node.powerUp!.remainingUses - 1
+            node.powerUp.remainingUses - 1 > 0
+              ? node.powerUp.remainingUses - 1
               : 1,
         };
+        childNode.hashTable = node.powerUp.remainingUses - 1 > 0 ? node.hashTable : {};
+
       }
       checkCell(childNode);
       childNode.type = CELL_TYPE.FLOWER;
@@ -145,28 +151,28 @@ export function getMovement(node: TreeNode, field: number): TreeNode {
     case CELL_TYPE.KOOPA:
       //tengo flor
       if (node.powerUp.type == CELL_TYPE.FLOWER) {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
         childNode.powerUp = {
           type:
-            node.powerUp!.remainingUses - 1 > 0
+            node.powerUp.remainingUses - 1 > 0
               ? CELL_TYPE.FLOWER
               : CELL_TYPE.FREE,
-          remainingUses: node.powerUp!.remainingUses - 1,
+          remainingUses: node.powerUp.remainingUses - 1,
         };
       }
       //no tengo nada
       if (node.powerUp.type == CELL_TYPE.FREE) {
-        childNode.cost = node.cost! + costs[2];
+        childNode.cost = node.cost + costs[2];
       }
       ///tengo estrella
       if (node.powerUp.type == CELL_TYPE.STAR) {
-        childNode.cost = node.cost! + costs[1];
+        childNode.cost = node.cost + costs[1];
         childNode.powerUp = {
           type:
-            node.powerUp!.remainingUses - 1 > 0
+            node.powerUp.remainingUses - 1 > 0
               ? CELL_TYPE.STAR
               : CELL_TYPE.FREE,
-          remainingUses: node.powerUp!.remainingUses - 1,
+          remainingUses: node.powerUp.remainingUses - 1,
         };
       }
       checkCell(childNode);
@@ -180,10 +186,10 @@ export function getMovement(node: TreeNode, field: number): TreeNode {
             node.powerUp!.remainingUses - 1 > 0
               ? CELL_TYPE.STAR
               : CELL_TYPE.FREE,
-          remainingUses: node.powerUp!.remainingUses - 1,
+          remainingUses: node.powerUp.remainingUses - 1,
         };
       } else {
-        childNode.cost = node.cost! + costs[0];
+        childNode.cost = node.cost + costs[0];
       }
       checkCell(childNode);
       childNode.type = field == 0 ? CELL_TYPE.FREE : CELL_TYPE.PRINCESS;

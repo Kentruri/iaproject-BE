@@ -84,6 +84,7 @@ function getMovement(node, field) {
             //tengo estrella, y llego a otra
             if (node.powerUp.type == CELL_TYPE.STAR) {
                 childNode.cost = node.cost + costs[1];
+                childNode.hashTable = {};
                 childNode.powerUp = {
                     type: CELL_TYPE.STAR,
                     remainingUses: node.powerUp.remainingUses + 6 - 1
@@ -92,6 +93,7 @@ function getMovement(node, field) {
             //no tengo nada
             if (node.powerUp.type == CELL_TYPE.FREE) {
                 childNode.cost = node.cost + costs[0];
+                childNode.hashTable = {};
                 childNode.powerUp = {
                     type: CELL_TYPE.STAR,
                     remainingUses: node.powerUp.remainingUses + 6
@@ -112,6 +114,7 @@ function getMovement(node, field) {
             //tengo flor, y llego a otra
             if (node.powerUp.type == CELL_TYPE.FLOWER) {
                 childNode.cost = node.cost + costs[0];
+                childNode.hashTable = {};
                 childNode.powerUp = {
                     type: CELL_TYPE.FLOWER,
                     remainingUses: node.powerUp.remainingUses + 1,
@@ -120,6 +123,7 @@ function getMovement(node, field) {
             //no tengo nada
             if (node.powerUp.type == CELL_TYPE.FREE) {
                 childNode.cost = node.cost + costs[0];
+                childNode.hashTable = {};
                 childNode.powerUp = {
                     type: CELL_TYPE.FLOWER,
                     remainingUses: 1,
@@ -136,6 +140,7 @@ function getMovement(node, field) {
                         ? node.powerUp.remainingUses - 1
                         : 1,
                 };
+                childNode.hashTable = node.powerUp.remainingUses - 1 > 0 ? node.hashTable : {};
             }
             checkCell(childNode);
             childNode.type = CELL_TYPE.FLOWER;
